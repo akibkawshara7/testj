@@ -1,0 +1,8 @@
+{
+  "name": "Remix anikume",
+  "description": "the original anikume",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

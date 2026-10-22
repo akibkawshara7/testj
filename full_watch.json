@@ -1,0 +1,65 @@
+{
+  "sub": [
+    {
+      "source": "Alpha",
+      "embed": "https://megavid.buzz/ani/113415/1/sub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fcp.megavid.buzz%2Fhls%2F44e55b8c-acb7-48ca-ae55-7109e75460d9%2Fplaylist.m3u8",
+      "subtitle": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fsub%2FNfDnFqNIBqcQxDETnyoYCMMYjunGoezWkbcgENuT-e4YsSRKLOsMc-O_oZlD-ALkGGZvjQTM_FrDU0-JN5v-Jd6_ZsgG8kimBW98i2wSk1rwHM8Dwo-07Ey0AS4K6JV3ux-uHdf3y3-HIvAXZVaQG9DDmATl0djdgTio_A1QAr8%2FtcqA-IFKlflceWcUFuuMBXrcer2k0G0ViM64xRMI0o3mLzt-i9tYYoSRfGSxtdGcwcQxoRoHqWEgGrbfbZavKuwz7pSoueU72MbehLfhTyVxt6D0kYjSBPlMJGRvy_SZ%2Fc94416bbb318bd2baa7ac6c3ab7117b9.vtt"
+    },
+    {
+      "source": "Beta",
+      "embed": "https://megavid.buzz/api/ani/113415/1/sub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fvid%2FrlqP-_M1tgA7K4e6_uo3khDK4D_eVU8f_x1GM2kfaiC7sMantvebImvTSRXANy_Ebc6LLeKqNrDeyTFBvOv0l4j5JtwBtYM7_GM7EesDbVSs_cyNfEduT8wRaQroR_B5LRsfNltKq7foq7EZX_de5Axvo0qPP8eZmbxz_fVa_l8%2FtcqA-IFKlflceWcUFuuMBXrcer2k0G0ViM64xRMI0o3mLzt-i9tYYoSRfGSxtdGcwcQxoRoHqWEgGrbfbZavKuwz7pSoueU72MbehLfhTyVxt6D0kYjSBPlMJGRvy_SZ%2Fmaster.m3u8",
+      "subtitle": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fsub%2FNfDnFqNIBqcQxDETnyoYCMMYjunGoezWkbcgENuT-e4YsSRKLOsMc-O_oZlD-ALkGGZvjQTM_FrDU0-JN5v-Jd6_ZsgG8kimBW98i2wSk1rwHM8Dwo-07Ey0AS4K6JV3ux-uHdf3y3-HIvAXZVaQG9DDmATl0djdgTio_A1QAr8%2FtcqA-IFKlflceWcUFuuMBXrcer2k0G0ViM64xRMI0o3mLzt-i9tYYoSRfGSxtdGcwcQxoRoHqWEgGrbfbZavKuwz7pSoueU72MbehLfhTyVxt6D0kYjSBPlMJGRvy_SZ%2Fc94416bbb318bd2baa7ac6c3ab7117b9.vtt"
+    },
+    {
+      "source": "Gamma",
+      "embed": "https://megavid.buzz/api/mal/40748/1/sub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fvid%2FrlqP-_M1tgA7K4e6_uo3khDK4D_eVU8f_x1GM2kfaiC7sMantvebImvTSRXANy_Ebc6LLeKqNrDeyTFBvOv0l4j5JtwBtYM7_GM7EesDbVSs_cyNfEduT8wRaQroR_B5LRsfNltKq7foq7EZX_de5Axvo0qPP8eZmbxz_fVa_l8%2FP9Rg-4RpaOdL5ISPRHYdNoQnUDWWgKjeDm6fhZG4eGCh2IzpBhOHnaQe-JiBwKl5CXQVoqX3soEWlhi8hx3i-GeJWuVntAI8lILUnSUx4XnD4vHv3Hy2R7XH36M-LtrJ%2Fmaster.m3u8",
+      "subtitle": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fsub%2FNfDnFqNIBqcQxDETnyoYCMMYjunGoezWkbcgENuT-e4YsSRKLOsMc-O_oZlD-ALkGGZvjQTM_FrDU0-JN5v-Jd6_ZsgG8kimBW98i2wSk1rwHM8Dwo-07Ey0AS4K6JV3ux-uHdf3y3-HIvAXZVaQG9DDmATl0djdgTio_A1QAr8%2FP9Rg-4RpaOdL5ISPRHYdNoQnUDWWgKjeDm6fhZG4eGCh2IzpBhOHnaQe-JiBwKl5CXQVoqX3soEWlhi8hx3i-GeJWuVntAI8lILUnSUx4XnD4vHv3Hy2R7XH36M-LtrJ%2Fc94416bbb318bd2baa7ac6c3ab7117b9.vtt"
+    },
+    {
+      "source": "Delta",
+      "embed": "https://megaplay.buzz/stream/ani/113415/1/sub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegaplay.buzz%2F&url=https%3A%2F%2Fcdn.kryntal.top%2Fanime%2Fc399862d3b9d6b76c8436e924a68c45b%2F8b41beec050034c872dfcb26c552b36c%2Fmaster.m3u8",
+      "subtitle": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegaplay.buzz%2F&url=https%3A%2F%2Fcdn.kryntal.top%2Fanime%2Fc399862d3b9d6b76c8436e924a68c45b%2F8b41beec050034c872dfcb26c552b36c%2Fsubtitles%2Fc94416bbb318bd2baa7ac6c3ab7117b9.vtt"
+    }
+  ],
+  "dub": [
+    {
+      "source": "Alpha",
+      "embed": "https://megavid.buzz/ani/113415/1/dub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fcp.megavid.buzz%2Fhls%2F4917f6e9-3e86-4c15-9245-08c16f74fea1%2Fplaylist.m3u8"
+    },
+    {
+      "source": "Beta",
+      "embed": "https://megavid.buzz/api/ani/113415/1/dub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fvid%2FoGcKE-7SFFyfBYGRJEKDch_djIVSk_RTY2lMS7VNQzFB87Ez3i2-YHbe4r9I_LXak4J0U2oWklR1e4XVaz3BW1N7BJU1aUShJ2qtnFrNznoyPAnyRE144PpSvoBMiRQj71O5EYsHqh7uVg5d5tA8h9o9Q5YjZascPeHddUnKtYM%2F8X1rI2AASPXT19_UvFhPDyqY6A75MO3Q50oC3KsCyLTC7az7-KKxNeZM5TO4XpCUHhmDDkUznpSIZ1Fou7VxWK1uoWD8_pG68KCyoFBZwBP0063A7A-AeRewdkgqijOZ%2Fmaster.m3u8"
+    },
+    {
+      "source": "Gamma",
+      "embed": "https://megavid.buzz/api/mal/40748/1/dub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegavid.buzz%2F&url=https%3A%2F%2Fmegavid.buzz%2Fvid%2FoGcKE-7SFFyfBYGRJEKDch_djIVSk_RTY2lMS7VNQzFB87Ez3i2-YHbe4r9I_LXak4J0U2oWklR1e4XVaz3BW1N7BJU1aUShJ2qtnFrNznoyPAnyRE144PpSvoBMiRQj71O5EYsHqh7uVg5d5tA8h9o9Q5YjZascPeHddUnKtYM%2FvQC7mff3GGnzrQEqZD6lE1X2H-AS5ICm0Ao_EEj0f5entL2F9E9QWSV5DjEhNAF1YWRRq2L5LFvE3pefHXnVN_rjxLhQ7stBV-kVuwB5LSs3sBfd3SbO1PeJNV_6uYhN%2Fmaster.m3u8"
+    },
+    {
+      "source": "Delta",
+      "embed": "https://megaplay.buzz/stream/ani/113415/1/dub",
+      "hls": "https://api.akadevs-akib.workers.dev/api/proxy?ref=https%3A%2F%2Fmegaplay.buzz%2F&url=https%3A%2F%2Fcdn.kryntal.top%2Fanime%2Fc399862d3b9d6b76c8436e924a68c45b%2Fab7ba16b1d52e71ee803d0c30f1771a4%2Fmaster.m3u8"
+    }
+  ],
+  "hindi": [
+    {
+      "source": "Alpha",
+      "embed": "https://as-cdn26.top/video/0a09c8844ba8f0936c20bd791130d6b6",
+      "hls": "https://api.akadevs.xyz/proxy?al=hin&ref=hindi&url=https%3A%2F%2Fas-cdn26.top%2Fvideo%2F0a09c8844ba8f0936c20bd791130d6b6"
+    }
+  ],
+  "intro": {
+    "start": 55,
+    "end": 143
+  },
+  "outro": {
+    "start": 0,
+    "end": 0
+  }
+}
