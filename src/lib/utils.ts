@@ -46,13 +46,13 @@ export function getStatusColor(status?: string | null) {
   const upper = status?.toUpperCase()?.replace(/[\s-]+/g, "_");
   switch (upper) {
     case "RELEASING":
-      return "text-[#22c55e]";
+      return "text-[#df7426]";
     case "FINISHED":
     case "COMPLETED":
-      return "text-[#3b82f6]";
+      return "text-green-500";
     case "NOT_YET_RELEASED":
     case "UPCOMING":
-      return "text-[#ef4444]";
+      return "text-red-500";
     case "CANCELLED":
       return "text-red-600";
     case "HIATUS":
@@ -67,13 +67,13 @@ export function getStatusBgColor(status?: string | null) {
   const upper = status?.toUpperCase()?.replace(/[\s-]+/g, "_");
   switch (upper) {
     case "RELEASING":
-      return "bg-[#22c55e]";
+      return "bg-[#df7426]";
     case "FINISHED":
     case "COMPLETED":
-      return "bg-[#3b82f6]";
+      return "bg-green-500";
     case "NOT_YET_RELEASED":
     case "UPCOMING":
-      return "bg-[#ef4444]";
+      return "bg-red-500";
     case "CANCELLED":
       return "bg-red-600";
     case "HIATUS":

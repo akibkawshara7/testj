@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Search, X, Star } from "lucide-react";
-import { titleOf, prettyFormat, searchAnime } from "@/lib/anilist";
+import { titleOf, prettyFormat } from "@/lib/anilist";
 import { encodeId } from "@/lib/id-codec";
 import { formatScore, formatStatus, getScoreColor, getStatusColor } from "@/lib/utils";
 import { fetchApikumeEndpoint } from "@/lib/apikume";
-import { usePosterTransition } from "@/lib/shared-poster-transition";
 
 type Props = {
   open: boolean;
@@ -18,7 +17,6 @@ export function SearchModal({ open, onClose }: Props) {
   const [debounced, setDebounced] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { startPosterTransition } = usePosterTransition();
 
   useEffect(() => {
     if (open) {
@@ -48,14 +46,10 @@ export function SearchModal({ open, onClose }: Props) {
   const { data: results, isFetching } = useQuery({
     queryKey: ["search-modal", debounced],
     queryFn: async () => {
-      try {
-        const res = await fetchApikumeEndpoint(
-          `/api/anime/search?q=${encodeURIComponent(debounced)}`,
-        );
-        const items = Array.isArray(res) ? res : res?.results || [];
-        if (items.length > 0) return items;
-      } catch {}
-      return searchAnime(debounced);
+      const res = await fetchApikumeEndpoint(
+        `/api/anime/search?q=${encodeURIComponent(debounced)}`,
+      );
+      return Array.isArray(res) ? res : res?.results || [];
     },
     enabled: debounced.trim().length > 0,
     staleTime: 60_000,
@@ -139,56 +133,21 @@ export function SearchModal({ open, onClose }: Props) {
                     (m.genres || []).some(
                       (g: string) => g.toLowerCase() === "hentai" || g.toLowerCase() === "adult",
                     );
-                  let scoreDisplay: string | null = null;
-                  let scoreColor: string | null = null;
-
-                  const rawScore = m.rating ?? m.score ?? m.averageScore ?? m.meanScore;
-                  if (rawScore != null && rawScore !== "" && rawScore !== "N/A") {
-                    const num = parseFloat(String(rawScore).replace(/[^0-9.]/g, ""));
-                    if (!isNaN(num) && num > 0) {
-                      const val = num > 10 ? num / 10 : num;
-                      scoreDisplay = val.toFixed(1);
-                      scoreColor = getScoreColor(val * 10);
-                    }
-                  }
-
+                  const score = m.rating || m.averageScore || m.meanScore;
                   const mId = m.anikume_id || m.id;
                   const mTitle = titleOf(m);
-                  const posterSrc =
-                    m.poster || m.coverImage?.large || m.coverImage?.extraLarge || "";
-
-                  const handleItemClick = (e: React.MouseEvent) => {
-                    onClose();
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-                    e.preventDefault();
-                    const el = e.currentTarget.querySelector("img") as HTMLElement;
-                    const targetUrl = `/anime/${encodeId(mId, "anime")}`;
-                    if (el) {
-                      startPosterTransition({
-                        id: mId,
-                        poster: posterSrc,
-                        element: el,
-                        targetUrl,
-                      });
-                    } else {
-                      navigate({
-                        to: "/anime/$id",
-                        params: { id: encodeId(mId, "anime") },
-                      });
-                    }
-                  };
 
                   return (
                     <li key={mId}>
                       <Link
                         to="/anime/$id"
                         params={{ id: encodeId(mId, "anime") }}
-                        onClick={handleItemClick}
-                        className="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/5 active:scale-[0.99]"
+                        onClick={onClose}
+                        className="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-white/5"
                       >
                         <div className="relative shrink-0">
                           <img
-                            src={posterSrc}
+                            src={m.poster || m.coverImage?.large}
                             alt=""
                             className="size-14 rounded-md object-cover ring-1 ring-white/10"
                           />
@@ -203,14 +162,14 @@ export function SearchModal({ open, onClose }: Props) {
                             {mTitle}
                           </p>
                           <div className="mt-1 flex min-w-0 items-center gap-x-2 gap-y-0.5 overflow-hidden text-[11px] font-semibold text-muted-foreground">
-                            {scoreDisplay && scoreColor ? (
+                            {score != null ? (
                               <>
                                 <span
                                   className="inline-flex shrink-0 items-center gap-1 font-bold"
-                                  style={{ color: scoreColor }}
+                                  style={{ color: getScoreColor(Number(score)) }}
                                 >
                                   <Star className="size-3 fill-current" />
-                                  {scoreDisplay}
+                                  {formatScore(Number(score))}
                                 </span>
                                 <span aria-hidden className="shrink-0">
                                   •

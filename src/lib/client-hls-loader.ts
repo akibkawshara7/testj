@@ -14,18 +14,15 @@ const blobCache = new Map<string, { blobUrl: string; timestamp: number }>();
 
 // Periodic cleanup of stale blob objects every 5 minutes
 if (typeof window !== "undefined") {
-  setInterval(
-    () => {
-      const now = Date.now();
-      for (const [key, item] of blobCache.entries()) {
-        if (now - item.timestamp > 30 * 60 * 1000) {
-          URL.revokeObjectURL(item.blobUrl);
-          blobCache.delete(key);
-        }
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, item] of blobCache.entries()) {
+      if (now - item.timestamp > 30 * 60 * 1000) {
+        URL.revokeObjectURL(item.blobUrl);
+        blobCache.delete(key);
       }
-    },
-    5 * 60 * 1000,
-  );
+    }
+  }, 5 * 60 * 1000);
 }
 
 export async function createClientHlsBlobUrl(
@@ -55,7 +52,7 @@ export async function createClientHlsBlobUrl(
   try {
     // 1. Fetch manifest directly via proxy or client with proper headers
     let playlistText = "";
-
+    
     // First try proxy fetch with explicit referrer
     const proxyUrl = `/proxy?ref=${encodeURIComponent(effectiveRef || "https://megaplay.buzz/")}&url=${encodeURIComponent(hlsUrl)}`;
     const response = await fetch(proxyUrl, {
@@ -100,11 +97,7 @@ export async function createClientHlsBlobUrl(
         // Handle encryption keys and media tags with URI="path"
         if (trimmed.includes('URI="')) {
           return trimmed.replace(/URI="([^"]+)"/g, (match, uri) => {
-            if (
-              uri.startsWith("http://") ||
-              uri.startsWith("https://") ||
-              uri.startsWith("data:")
-            ) {
+            if (uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("data:")) {
               return match;
             }
             if (uri.startsWith("/")) {
@@ -117,11 +110,7 @@ export async function createClientHlsBlobUrl(
       }
 
       // If already absolute URL
-      if (
-        trimmed.startsWith("http://") ||
-        trimmed.startsWith("https://") ||
-        trimmed.startsWith("data:")
-      ) {
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:")) {
         return trimmed;
       }
 

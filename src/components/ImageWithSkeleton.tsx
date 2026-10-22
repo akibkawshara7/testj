@@ -30,7 +30,7 @@ export function ImageWithSkeleton({
     <div className={`relative overflow-hidden bg-card/40 ${wrapperClassName}`}>
       {hasError ? (
         <div
-          className={`absolute inset-0 size-full bg-card/40 z-0 pointer-events-none flex items-center justify-center ${skeletonClassName}`}
+          className={`absolute inset-0 size-full skeleton-box z-0 pointer-events-none flex items-center justify-center ${skeletonClassName}`}
         >
           <span className="text-[10px] text-muted-foreground/50 font-medium px-2 text-center select-none">
             {alt || "Image"}

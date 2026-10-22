@@ -11,65 +11,76 @@ interface Props {
   isLoading?: boolean;
 }
 
-export function TopListSection({
+export function ApikumeTopListSection({
   stacked = false,
   top10,
   top10Movies,
   isLoading = false,
 }: Props) {
-  // Remove skeleton loader completely
-  if (isLoading || (!top10 && !top10Movies)) {
-    return null;
-  }
-
   return (
     <div className={stacked ? "space-y-8" : "grid gap-8 lg:grid-cols-2"}>
-      {top10 && top10.length > 0 && (
-        <TopColumn
-          title="Top 10 Anime"
-          items={top10}
-          accent="hot"
-          limit={10}
-        />
-      )}
-      {top10Movies && top10Movies.length > 0 && (
-        <TopColumn
-          title="Top 10 Movies"
-          items={top10Movies}
-          accent="info"
-          limit={10}
-        />
-      )}
+      <ApikumeColumn
+        title="Top 10 Anime"
+        items={top10}
+        loading={isLoading || !top10}
+        accent="hot"
+        limit={10}
+      />
+      <ApikumeColumn
+        title="Top 10 Movies"
+        items={top10Movies}
+        loading={isLoading || !top10Movies}
+        accent="info"
+        limit={10}
+      />
     </div>
   );
 }
 
-function TopColumn({
+function ApikumeColumn({
   title,
   items,
+  loading,
   accent,
   limit,
 }: {
   title: string;
-  items: ApikumeAnimeItem[];
+  items: ApikumeAnimeItem[] | undefined;
+  loading: boolean;
   accent: "hot" | "info";
   limit: number;
 }) {
   return (
-    <div>
+    <div className="duration-300 animate-in fade-in slide-in-from-bottom-4">
       <h2 className="section-title mb-4">{title}</h2>
       <ul className="space-y-2 rounded-2xl border border-white/5 bg-card/30 p-3">
-        {items.slice(0, limit).map((m, i) => (
-          <li key={`top_${m.anikume_id || "item"}_${i}`} className="min-w-0">
-            <TopRowItem item={m} index={i + 1} accent={accent} />
-          </li>
-        ))}
+        {loading || !items
+          ? Array.from({ length: limit }).map((_, i) => (
+              <li
+                key={i}
+                className="flex min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-card/40 p-2 pr-3"
+              >
+                <span className="grid w-8 shrink-0 place-items-center text-xl font-black text-muted-foreground/40 sm:text-2xl">
+                  {i + 1}
+                </span>
+                <div className="size-14 shrink-0 rounded-lg skeleton-box sm:size-16" />
+                <div className="min-w-0 flex-1 space-y-2 pr-1">
+                  <div className="h-4 w-3/4 skeleton-text" />
+                  <div className="h-3 w-1/3 skeleton-text opacity-70" />
+                </div>
+              </li>
+            ))
+          : items.slice(0, limit).map((m, i) => (
+              <li key={m.anikume_id} className="min-w-0">
+                <ApikumeRow item={m} index={i + 1} accent={accent} />
+              </li>
+            ))}
       </ul>
     </div>
   );
 }
 
-function TopRowItem({
+function ApikumeRow({
   item,
   index,
   accent,
@@ -91,7 +102,7 @@ function TopRowItem({
     <Link
       to="/anime/$id"
       params={{ id: item.anikume_id }}
-      className="group flex min-w-0 items-center gap-3 rounded-xl border border-white/5 bg-card/40 p-2 pr-3 transition hover:-translate-y-0.5 hover:border-white/15 hover:bg-card active:scale-[0.98] cursor-pointer select-none"
+      className="group flex min-w-0 items-center gap-3 rounded-xl border border-white/5 bg-card/40 p-2 pr-3 transition hover:-translate-y-0.5 hover:border-white/15 hover:bg-card"
     >
       <span
         className={`grid w-8 shrink-0 place-items-center text-2xl font-black tabular-nums ${numberColor} sm:text-3xl`}
@@ -145,5 +156,3 @@ function TopRowItem({
     </Link>
   );
 }
-
-export { TopListSection as ApikumeTopListSection };

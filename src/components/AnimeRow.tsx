@@ -3,48 +3,39 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import type { AnilistMedia } from "@/lib/anilist";
-import type { ApikumeAnimeItem } from "@/lib/apikume";
 import { AnimeCard } from "./AnimeCard";
-import { Carousel, CarouselContent, CarouselItem } from "./ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "./ui/carousel";
 
 type Props = {
   title: string;
-  items?: ApikumeAnimeItem[];
-  isLoading?: boolean;
-  queryKey?: string;
-  fetcher?: () => Promise<AnilistMedia[]>;
+  queryKey: string;
+  fetcher: () => Promise<AnilistMedia[]>;
   viewAllSearch?: Record<string, string | number>;
   type?: "anime" | "manga";
 };
 
-export function AnimeRow({
-  title,
-  items,
-  isLoading: propLoading,
-  queryKey,
-  fetcher,
-  viewAllSearch,
-  type = "anime",
-}: Props) {
-  const query = useQuery({
-    queryKey: queryKey ? [queryKey] : ["empty"],
-    queryFn: fetcher || (() => Promise.resolve([])),
-    enabled: !!fetcher && !!queryKey,
+export function AnimeRow({ title, queryKey, fetcher, viewAllSearch, type = "anime" }: Props) {
+  const { data, isLoading } = useQuery({
+    queryKey: [queryKey],
+    queryFn: fetcher,
     staleTime: 1000 * 60 * 10,
   });
-
-  const loading = propLoading ?? query.isLoading;
-  const list = items || query.data || [];
 
   return (
     <AnimeRowShell
       title={title}
       titleHref={{
-        to: "/anime/browse",
+        to: type === "manga" ? "/manga/browse" : "/anime/browse",
         search: viewAllSearch ?? {},
       }}
     >
-      {loading || !list.length
+      {isLoading
         ? Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="w-[130px] shrink-0 sm:w-[165px] lg:w-[190px]">
               <div className="w-full rounded-xl skeleton-box" style={{ paddingBottom: "140%" }} />
@@ -52,20 +43,14 @@ export function AnimeRow({
               <div className="mt-1.5 h-3 w-1/2 skeleton-text opacity-70" />
             </div>
           ))
-        : list.map((m: any, idx: number) =>
-            m.anikume_id ? (
-              <AnimeCard key={`ap_${m.anikume_id}_${idx}`} item={m} />
-            ) : (
-              <AnimeCard key={`al_${m.id || "card"}_${idx}`} media={m} type={type} />
-            ),
-          )}
+        : data?.map((m) => <AnimeCard key={m.id} media={m} type={type} />)}
     </AnimeRowShell>
   );
 }
 
 /**
  * Shared row shell — used by AnimeRow and the related/recommendations rows on
- * the details page. Scroll arrows removed for clean swipe/drag experience.
+ * the details page so both get identical feather + chevron + slide behavior.
  */
 export function AnimeRowShell({
   title,
@@ -103,7 +88,7 @@ export function AnimeRowShell({
   }, [api]);
 
   return (
-    <section className="pt-8">
+    <section className="pt-8 duration-300 animate-in fade-in slide-in-from-bottom-4">
       {title && (
         <div className="mb-3 flex items-center gap-2 px-1">
           <HeadingTag
@@ -150,9 +135,9 @@ export function AnimeRowShell({
             })}
           </CarouselContent>
         </div>
+        <CarouselPrevious className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center bg-black/70 text-white opacity-0 group-hover/row:opacity-100 transition-opacity border-none hover:bg-black hover:scale-110 shadow-xl rounded-full" />
+        <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center bg-black/70 text-white opacity-0 group-hover/row:opacity-100 transition-opacity border-none hover:bg-black hover:scale-110 shadow-xl rounded-full" />
       </Carousel>
     </section>
   );
 }
-
-export { AnimeRow as ApikumeAnimeRow };

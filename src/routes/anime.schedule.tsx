@@ -11,24 +11,6 @@ import { titleOf } from "@/lib/anilist";
 import { UniversalClock } from "@/components/UniversalClock";
 
 export const Route = createFileRoute("/anime/schedule")({
-  loader: async ({ context: { queryClient } }) => {
-    const today = new Date();
-    const start = new Date(today);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(today);
-    end.setHours(23, 59, 59, 999);
-    const startUnix = Math.floor(start.getTime() / 1000);
-    const endUnix = Math.floor(end.getTime() / 1000);
-
-    return queryClient.ensureQueryData({
-      queryKey: ["schedule", startUnix, endUnix],
-      queryFn: async () => {
-        const res = await fetchSchedule(startUnix, endUnix, 1);
-        return res.items;
-      },
-      staleTime: 1000 * 60 * 10,
-    });
-  },
   head: () => ({
     meta: [
       { title: "Anime Schedule · AniKume" },
@@ -105,10 +87,7 @@ function SchedulePage() {
         </div>
 
         <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-6">
-          <h2
-            suppressHydrationWarning
-            className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2"
-          >
+          <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
             {dayName} <span className="text-muted-foreground">•</span> {dateFormatted}
           </h2>
           <span className="text-xs sm:text-sm font-semibold text-muted-foreground shrink-0">
@@ -135,12 +114,10 @@ function SchedulePage() {
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-5">
             {data
               ?.filter((item) => item.media)
-              .map((item, idx) => (
-                <Link
-                  key={`sched_${item.id || item.media.id || "item"}_${idx}`}
-                  to="/anime/$id"
-                  params={{ id: String(item.media.id) }}
-                  className="group block shrink-0 snap-start transition-transform duration-300 hover:-translate-y-1 cursor-pointer"
+              .map((item) => (
+                <div
+                  key={item.id}
+                  className="group block shrink-0 snap-start transition-transform duration-300 hover:-translate-y-1"
                 >
                   <div
                     className="relative w-full overflow-hidden rounded-lg bg-card ring-1 ring-white/5 shadow-lg transition group-hover:ring-primary/60"
@@ -159,10 +136,7 @@ function SchedulePage() {
                       <span className="rounded bg-black/80 px-1 py-0.5 sm:px-1.5 sm:py-0.5 text-[8px] sm:text-[10px] font-bold text-white shadow backdrop-blur-md leading-none">
                         Ep {item.episode}
                       </span>
-                      <span
-                        suppressHydrationWarning
-                        className="flex items-center gap-0.5 sm:gap-1 rounded bg-black/80 px-1 py-0.5 sm:px-1.5 sm:py-0.5 text-[8px] sm:text-[10px] font-bold text-white shadow backdrop-blur-md leading-none"
-                      >
+                      <span className="flex items-center gap-0.5 sm:gap-1 rounded bg-black/80 px-1 py-0.5 sm:px-1.5 sm:py-0.5 text-[8px] sm:text-[10px] font-bold text-white shadow backdrop-blur-md leading-none">
                         <Clock className="size-2 sm:size-2.5" />
                         {format(new Date(item.airingAt * 1000), "h:mm a")}
                       </span>
@@ -183,7 +157,7 @@ function SchedulePage() {
                   <h3 className="mt-2 sm:mt-3 line-clamp-2 text-[11px] sm:text-sm font-semibold leading-snug text-foreground/90 group-hover:text-foreground">
                     {titleOf(item.media)}
                   </h3>
-                </Link>
+                </div>
               ))}
           </div>
         )}

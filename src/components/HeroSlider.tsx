@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   ChevronLeft,
@@ -6,352 +7,261 @@ import {
   Info,
   Play,
   Star,
+  Calendar,
   Radio,
   CheckCircle2,
-  Calendar,
+  BookOpen,
 } from "lucide-react";
-import type { ApikumeHeroItem } from "@/lib/apikume";
-import { apikumeTitle } from "@/lib/apikume";
-import { getScoreColor } from "@/lib/utils";
+import { fetchHero, fetchHeroManga, stripHtml, titleOf, type AnilistMedia } from "@/lib/anilist";
+import { encodeId } from "@/lib/id-codec";
+import { getScoreColor, formatScore } from "@/lib/utils";
 
 function statusLabel(s?: string | null) {
-  const upper = s?.toUpperCase();
-  switch (upper) {
+  switch (s) {
     case "RELEASING":
-      return {
-        label: "Releasing",
-        icon: Radio,
-        tone: "text-[#22c55e]",
-        bgDot: "bg-[#22c55e]",
-      };
+      return { label: "Releasing", icon: Radio, tone: "text-[#df7426]" };
     case "FINISHED":
-    case "COMPLETED":
-      return {
-        label: "Finished",
-        icon: CheckCircle2,
-        tone: "text-[#3b82f6]",
-        bgDot: "bg-[#3b82f6]",
-      };
-    case "UPCOMING":
+      return { label: "Finished", icon: CheckCircle2, tone: "text-green-500" };
     case "NOT_YET_RELEASED":
-      return {
-        label: "Upcoming",
-        icon: Calendar,
-        tone: "text-[#ef4444]",
-        bgDot: "bg-[#ef4444]",
-      };
+      return { label: "Upcoming", icon: Calendar, tone: "text-red-500" };
+    case "CANCELLED":
+      return { label: "Cancelled", icon: Info, tone: "text-red-600" };
+    case "HIATUS":
+      return { label: "On Hiatus", icon: Info, tone: "text-yellow-500" };
     default:
-      return {
-        label: s || "Anime",
-        icon: Info,
-        tone: "text-muted-foreground",
-        bgDot: "bg-muted-foreground",
-      };
+      return { label: "Anime", icon: Info, tone: "text-muted-foreground" };
   }
 }
 
-export function HeroSlider({
-  slides = [],
-  isLoading = false,
-}: {
-  slides?: ApikumeHeroItem[];
-  isLoading?: boolean;
-}) {
+export function HeroSlider({ type = "anime" }: { type?: "anime" | "manga" }) {
+  const fetchFn = type === "anime" ? fetchHero : fetchHeroManga;
+  const { data, isLoading } = useQuery({
+    queryKey: ["hero", type],
+    queryFn: fetchFn,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const slides = (data ?? []).slice(0, 6);
+
   const [i, setI] = useState(0);
   const count = slides.length;
 
   useEffect(() => {
     if (count < 2) return;
-    const id = setInterval(() => {
-      setI((p) => (p + 1) % count);
-    }, 6000);
+    const id = setInterval(() => setI((p) => (p + 1) % count), 7000);
     return () => clearInterval(id);
   }, [count]);
 
-  useEffect(() => {
-    if (i >= count && count > 0) {
-      setI(0);
-    }
-  }, [count, i]);
-
   if (isLoading || count === 0) {
-    return null;
+    return <HeroSliderSkeleton />;
   }
 
-  const m = slides[i] || slides[0];
-  const numRating = m.rating ? parseFloat(String(m.rating)) : null;
-  const ratingScore = numRating != null ? numRating * 10 : 85;
-  const scoreColor = getScoreColor(ratingScore);
-  const st = statusLabel(m.status);
-  const StatusIcon = st.icon;
-  const title = apikumeTitle(m.title);
+  const m = slides[i];
 
   return (
-    <section className="relative mx-auto max-w-[1500px] px-2 pt-1 sm:px-4 sm:pt-2">
-      {/* Curved Frame Container: increased length/height by 10% */}
-      <div className="relative h-[475px] sm:h-[510px] md:h-[565px] lg:h-[590px] w-full overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/10 shadow-2xl bg-black">
-        {slides.map((s, idx) => {
-          const bannerSrc = s.banner || s.poster || "";
-          const mobileSrc = s.poster || s.banner || "";
-          const isCurrent = idx === i;
+    <section className="relative h-[65vh] min-h-[460px] md:h-[72vh] md:min-h-[530px] w-full overflow-hidden">
+      {slides.map((s, idx) => {
+        const desktopSrc = s.bannerImage ?? s.coverImage.extraLarge;
+        const mobileSrc = s.coverImage.extraLarge ?? s.bannerImage ?? "";
+        return (
+          <picture key={s.id} aria-hidden={idx !== i}>
+            <source media="(min-width: 768px)" srcSet={desktopSrc} />
+            <img
+              src={mobileSrc}
+              alt=""
+              className={
+                "absolute inset-0 size-full object-cover transition-all duration-700 ease-out " +
+                (idx === i ? "scale-100 opacity-100" : "scale-105 opacity-0")
+              }
+            />
+          </picture>
+        );
+      })}
 
-          return (
-            <div
-              key={`slide_${s.anikume_id || "hero"}_${idx}`}
-              aria-hidden={!isCurrent}
-              className={`absolute inset-0 size-full transition-opacity duration-500 ease-out ${
-                isCurrent ? "opacity-100 z-0" : "opacity-0 pointer-events-none"
-              }`}
-            >
-              {/* PC Backdrop using API banner */}
-              <img
-                src={bannerSrc}
-                alt=""
-                referrerPolicy="no-referrer"
-                decoding="async"
-                loading="eager"
-                onError={(e) => {
-                  if (s.poster && e.currentTarget.src !== s.poster) {
-                    e.currentTarget.src = s.poster;
-                  }
-                }}
-                className="hidden md:block size-full object-cover object-center select-none"
-              />
+      {/* Subtle gradient — preserves banner brightness, just fades to bg at bottom/left */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/20 to-transparent" />
 
-              {/* Mobile Art using poster */}
-              <img
-                src={mobileSrc}
-                alt=""
-                referrerPolicy="no-referrer"
-                decoding="async"
-                loading="eager"
-                onError={(e) => {
-                  if (s.banner && e.currentTarget.src !== s.banner) {
-                    e.currentTarget.src = s.banner;
-                  }
-                }}
-                className="block md:hidden size-full object-cover object-top select-none"
-              />
-            </div>
-          );
-        })}
+      <div className="absolute inset-x-0 bottom-0 px-4 pb-16 sm:px-6 md:pb-20">
+        <div className="mx-auto max-w-[1500px]">
+          <SlideContent key={m.id} m={m} type={type} />
+        </div>
+      </div>
 
-        {/* Bottom subtle gradient */}
-        <div className="absolute inset-x-0 bottom-0 h-[20%] max-h-[110px] bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none" />
-        <div className="hidden md:block absolute inset-y-0 left-0 w-[55%] bg-gradient-to-r from-black/85 via-black/40 to-transparent pointer-events-none" />
-
-        {/* MOBILE VIEW */}
-        <div className="md:hidden absolute inset-x-0 bottom-0 z-10 flex flex-col items-center justify-end px-4 pb-9 text-center pointer-events-none">
-          <div className="max-w-xl mx-auto flex flex-col items-center duration-300 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto">
-            {/* Title */}
-            <h1 className="text-sm sm:text-base font-bold leading-snug tracking-tight text-white drop-shadow-md max-w-[90%] mx-auto line-clamp-2">
-              {title}
-            </h1>
-
-            {/* Single Unified Capsule Pill */}
-            <div className="mt-2.5 inline-flex items-center justify-center gap-2 rounded-full bg-black/65 border border-white/15 px-3.5 py-1 backdrop-blur-md text-[11px] font-semibold text-white/90 shadow-md">
-              <div className="flex items-center gap-1.5">
-                <StatusIcon className={`size-3.5 ${st.tone}`} />
-                <span className={st.tone}>{st.label}</span>
-              </div>
-
-              <span className="h-3 w-[1px] bg-white/20" />
-              <span className="text-white/80">{m.year || m.format || "TV"}</span>
-              <span className="h-3 w-[1px] bg-white/20" />
-
-              <div className="flex items-center gap-1 font-bold" style={{ color: scoreColor }}>
-                <Star
-                  className="size-3 fill-current"
-                  style={{ color: scoreColor, fill: scoreColor }}
-                />
-                <span style={{ color: scoreColor }}>
-                  {numRating != null ? numRating.toFixed(1) : "8.5"}
-                </span>
-              </div>
-
-              {m.is_adult && (
-                <>
-                  <span className="h-3 w-[1px] bg-white/20" />
-                  <span className="text-red-400 font-bold">18+</span>
-                </>
-              )}
-            </div>
-
-            {/* Action Buttons with active scale tap animation */}
-            <div className="mt-3 flex items-center justify-center gap-2.5">
-              <Link
-                to="/anime/$id"
-                params={{ id: m.anikume_id }}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white text-zinc-950 font-bold text-xs px-5 py-2 shadow-lg hover:bg-zinc-200 transition active:scale-95 cursor-pointer"
-              >
-                <Play className="size-3.5 fill-current ml-0.5" />
-                Watch
-              </Link>
-
-              <Link
-                to="/anime/$id"
-                params={{ id: m.anikume_id }}
-                aria-label="Details"
-                className="grid size-8 place-items-center rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white backdrop-blur-md transition active:scale-95 cursor-pointer"
-              >
-                <Info className="size-4" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Mobile Bottom Left Prev (<) */}
+      <div className="pointer-events-none absolute inset-x-4 bottom-3 z-10 flex items-center gap-3 sm:inset-x-6 sm:bottom-5">
+        <div className="pointer-events-auto flex min-w-0 flex-1 items-center gap-1.5">
+          {slides.map((s, idx) => (
+            <button
+              key={s.id}
+              aria-label={`Go to slide ${idx + 1}`}
+              onClick={() => setI(idx)}
+              className={
+                "h-1 rounded-full transition-all duration-300 " +
+                (idx === i ? "w-6 bg-foreground" : "w-3 bg-foreground/30 hover:bg-foreground/60")
+              }
+            />
+          ))}
+        </div>
+        <div className="pointer-events-auto flex shrink-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
+          <span className="tabular-nums">
+            <span className="text-foreground">{i + 1}</span>/{count}
+          </span>
           <button
-            aria-label="Previous slide"
+            aria-label="Previous"
             onClick={() => setI((p) => (p - 1 + count) % count)}
-            className="pointer-events-auto absolute left-2.5 bottom-2.5 z-20 grid size-7 place-items-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition active:scale-90 cursor-pointer"
+            className="grid size-8 place-items-center rounded-full bg-black/60 text-foreground transition hover:bg-white/10"
           >
             <ChevronLeft className="size-4" />
           </button>
-
-          {/* Mobile Bottom Right Next (>) */}
           <button
-            aria-label="Next slide"
+            aria-label="Next"
             onClick={() => setI((p) => (p + 1) % count)}
-            className="pointer-events-auto absolute right-2.5 bottom-2.5 z-20 grid size-7 place-items-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition active:scale-90 cursor-pointer"
+            className="grid size-8 place-items-center rounded-full bg-black/60 text-foreground transition hover:bg-white/10"
           >
             <ChevronRight className="size-4" />
           </button>
-
-          {/* Mobile Minimal Slide Dots */}
-          <div className="pointer-events-auto absolute inset-x-0 bottom-3 z-20 flex items-center justify-center gap-1.5">
-            {slides.map((s, idx) => (
-              <button
-                key={`mobdot_${s.anikume_id || "hero"}_${idx}`}
-                aria-label={`Go to slide ${idx + 1}`}
-                onClick={() => setI(idx)}
-                className={
-                  "h-1 rounded-full transition-all duration-300 " +
-                  (idx === i ? "w-6 bg-white" : "w-1.5 bg-white/30 hover:bg-white/60")
-                }
-              />
-            ))}
-          </div>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* PC VIEW */}
-        <div className="hidden md:flex absolute inset-x-0 bottom-0 z-10 items-end justify-between px-8 lg:px-12 pb-7 pt-4">
-          {/* Left Info Stack */}
-          <div className="max-w-xl flex flex-col items-start text-left duration-300 animate-in fade-in">
-            <h1 className="text-xl lg:text-2xl font-black leading-tight tracking-tight text-white drop-shadow-lg max-w-lg line-clamp-2">
-              {title}
-            </h1>
+function SlideContent({ m, type }: { m: AnilistMedia; type: "anime" | "manga" }) {
+  const score = m.averageScore ?? m.meanScore;
+  const st = statusLabel(m.status);
+  const StatusIcon = st.icon;
+  const imageSrc = m.bannerImage ?? m.coverImage.extraLarge ?? "";
+  const filterId = `displacement-${m.id}`;
 
-            <div className="mt-2.5 inline-flex items-center gap-2.5 rounded-full bg-black/65 border border-white/15 px-3.5 py-1 backdrop-blur-md text-xs font-semibold text-white/90 shadow-md">
-              <div className="flex items-center gap-1.5">
-                <StatusIcon className={`size-3.5 ${st.tone}`} />
-                <span className={st.tone}>{st.label}</span>
-              </div>
+  const continueWatchingItem = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("continue_watching_list");
+      if (raw) {
+        const list = JSON.parse(raw);
+        return list.find((item: any) => item.animeId === m.id);
+      }
+    } catch {}
+    return null;
+  }, [m.id]);
 
-              <span className="h-3 w-[1px] bg-white/20" />
-              <span className="text-white/80">{m.year || m.format || "TV"}</span>
-              <span className="h-3 w-[1px] bg-white/20" />
+  const titleColor = m.coverImage?.color || "var(--brand, #df7426)";
 
-              <div className="flex items-center gap-1 font-bold" style={{ color: scoreColor }}>
-                <Star
-                  className="size-3 fill-current"
-                  style={{ color: scoreColor, fill: scoreColor }}
-                />
-                <span style={{ color: scoreColor }}>
-                  {numRating != null ? numRating.toFixed(1) : "8.5"}
-                </span>
-              </div>
+  return (
+    <div className="max-w-2xl duration-300 animate-in fade-in slide-in-from-bottom-6">
+      <div className="relative mb-2">
+        <h1
+          className="relative z-10 w-fit text-xl font-black leading-tight tracking-tight sm:text-2xl md:text-3xl animate-in fade-in max-w-[95%] line-clamp-3 drop-shadow-xl"
+          style={{
+            backgroundImage: `linear-gradient(to right, ${titleColor} 0%, #ffffff 55%)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          {titleOf(m)}
+        </h1>
+      </div>
 
-              {m.is_adult && (
-                <>
-                  <span className="h-3 w-[1px] bg-white/20" />
-                  <span className="text-red-400 font-bold">18+</span>
-                </>
-              )}
-            </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2.5 py-1 ${st.tone}`}
+        >
+          <StatusIcon className="size-3.5" />
+          {st.label}
+        </span>
+        {score != null && (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1">
+            <Star
+              className="size-3"
+              style={{ fill: getScoreColor(score), color: getScoreColor(score) }}
+            />
+            <span style={{ color: getScoreColor(score) }}>{formatScore(score)}</span>
+          </span>
+        )}
+        {m.startDate.year && (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-muted-foreground">
+            <Calendar className="size-3" />
+            {m.startDate.year}
+          </span>
+        )}
+      </div>
 
-            {m.description && (
-              <p className="mt-3 text-xs lg:text-sm leading-relaxed text-zinc-300 line-clamp-2 max-w-lg drop-shadow">
-                {m.description.replace(/<[^>]*>?/gm, "")}
-              </p>
+      {m.description && (
+        <p
+          className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground line-clamp-3 sm:text-sm drop-shadow-md opacity-80"
+          dangerouslySetInnerHTML={{ __html: m.description }}
+        />
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        {continueWatchingItem ? (
+          <Link
+            to={type === "anime" ? "/anime/watch/$id" : "/manga/read/$id"}
+            params={{ id: encodeId(m.id, type) }}
+            hash={String(continueWatchingItem.episodeNum)}
+            className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background transition hover:scale-[1.02]"
+          >
+            {type === "anime" ? (
+              <Play className="size-4 fill-current" />
+            ) : (
+              <BookOpen className="size-4" />
             )}
+            {type === "anime"
+              ? `Continue Ep ${continueWatchingItem.episodeNum}`
+              : `Continue Ch ${continueWatchingItem.episodeNum}`}
+          </Link>
+        ) : (
+          <Link
+            to={type === "anime" ? "/anime/watch/$id" : "/manga/read/$id"}
+            params={{ id: encodeId(m.id, type) }}
+            hash="1"
+            className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background transition hover:scale-[1.02]"
+          >
+            {type === "anime" ? (
+              <Play className="size-4 fill-current" />
+            ) : (
+              <BookOpen className="size-4" />
+            )}
+            {type === "anime" ? "Play Now" : "Read Now"}
+          </Link>
+        )}
+        <Link
+          to={type === "anime" ? "/anime/$id" : "/manga/$id"}
+          params={{ id: encodeId(m.id, type) }}
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-bold text-foreground backdrop-blur-md transition hover:bg-white/10 hover:scale-[1.02]"
+        >
+          <Info className="size-4" />
+          Details
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-            {/* PC Action Buttons */}
-            <div className="mt-4 flex items-center gap-3">
-              <Link
-                to="/anime/$id"
-                params={{ id: m.anikume_id }}
-                className="inline-flex items-center gap-2 rounded-full bg-white text-zinc-950 font-bold text-sm px-6 py-2.5 shadow-xl hover:bg-zinc-200 transition hover:scale-105 active:scale-95 cursor-pointer"
-              >
-                <Play className="size-4 fill-current ml-0.5" />
-                Watch
-              </Link>
+function HeroSliderSkeleton() {
+  return (
+    <section className="relative h-[65vh] min-h-[460px] md:h-[72vh] md:min-h-[530px] w-full overflow-hidden bg-card/40 border-b border-white/10">
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
 
-              <Link
-                to="/anime/$id"
-                params={{ id: m.anikume_id }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer"
-              >
-                <Info className="size-4" />
-                Details
-              </Link>
+      <div className="absolute inset-x-0 bottom-0 px-4 pb-16 sm:px-6 md:pb-20">
+        <div className="mx-auto max-w-[1500px]">
+          <div className="max-w-2xl space-y-4">
+            <div className="h-8 md:h-12 w-3/4 skeleton-text" />
+            <div className="flex gap-2">
+              <div className="h-6 w-20 skeleton-text" />
+              <div className="h-6 w-14 skeleton-text" />
+              <div className="h-6 w-16 skeleton-text" />
             </div>
-          </div>
-
-          {/* Right Side: Anime Cover Card */}
-          <div className="flex flex-col items-center shrink-0 w-36 lg:w-44 duration-300 animate-in fade-in">
-            <Link
-              to="/anime/$id"
-              params={{ id: m.anikume_id }}
-              className="group block relative w-full aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/15 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer select-none"
-            >
-              <div className="size-full">
-                <img
-                  src={m.poster}
-                  alt={title}
-                  referrerPolicy="no-referrer"
-                  decoding="async"
-                  loading="eager"
-                  className="size-full object-cover"
-                />
-              </div>
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="grid size-9 place-items-center rounded-full bg-white text-black shadow-lg">
-                  <Play className="size-4 fill-current ml-0.5" />
-                </span>
-              </div>
-            </Link>
-
-            {/* Controls Below Cover */}
-            <div className="mt-2.5 flex items-center justify-between w-full px-1 text-white">
-              <button
-                aria-label="Previous slide"
-                onClick={() => setI((p) => (p - 1 + count) % count)}
-                className="grid size-7 place-items-center rounded-full text-white/70 hover:text-white hover:bg-white/15 transition cursor-pointer"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-
-              <div className="flex items-center gap-1.5">
-                {slides.map((s, idx) => (
-                  <button
-                    key={`pcdot_${s.anikume_id || "hero"}_${idx}`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                    onClick={() => setI(idx)}
-                    className={
-                      "h-1.5 rounded-full transition-all duration-300 " +
-                      (idx === i ? "w-5 bg-white" : "w-1.5 bg-white/30 hover:bg-white/60")
-                    }
-                  />
-                ))}
-              </div>
-
-              <button
-                aria-label="Next slide"
-                onClick={() => setI((p) => (p + 1) % count)}
-                className="grid size-7 place-items-center rounded-full text-white/70 hover:text-white hover:bg-white/15 transition cursor-pointer"
-              >
-                <ChevronRight className="size-4" />
-              </button>
+            <div className="space-y-2 pt-2">
+              <div className="h-4 w-full skeleton-text" />
+              <div className="h-4 w-5/6 skeleton-text" />
+              <div className="h-4 w-2/3 skeleton-text opacity-70" />
+            </div>
+            <div className="flex gap-3 pt-3">
+              <div className="h-11 w-32 rounded-full skeleton-box" />
+              <div className="h-11 w-28 rounded-full skeleton-box" />
             </div>
           </div>
         </div>
@@ -359,5 +269,3 @@ export function HeroSlider({
     </section>
   );
 }
-
-export { HeroSlider as ApikumeHeroSlider };

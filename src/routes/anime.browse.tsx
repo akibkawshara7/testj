@@ -9,7 +9,6 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { fetchApikumeEndpoint } from "@/lib/apikume";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { usePosterTransition } from "@/lib/shared-poster-transition";
 import { FORMATS, GENRES, prettyFormat, titleOf, SEASONS, SORTS, STATUSES } from "@/lib/anilist";
 import { encodeId } from "@/lib/id-codec";
 
@@ -26,18 +25,6 @@ const browseSchema = z.object({
 
 export const Route = createFileRoute("/anime/browse")({
   validateSearch: zodValidator(browseSchema),
-  loader: async ({ context: { queryClient }, location }) => {
-    const searchParams = new URLSearchParams(location.searchStr);
-    const paramsObj = Object.fromEntries(searchParams.entries());
-    return queryClient.ensureQueryData({
-      queryKey: ["browse", paramsObj],
-      queryFn: async () => {
-        const res = await fetchApikumeEndpoint(`/api/anime/browse?${searchParams.toString()}`);
-        return res;
-      },
-      staleTime: 1000 * 60 * 5,
-    });
-  },
   head: () => ({
     meta: [
       { title: "Browse Anime · AniDrone" },
@@ -170,9 +157,58 @@ function BrowsePage() {
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {isLoading
-            ? null
-            : data?.results?.map((m: any, idx: number) => (
-                <BrowseCard key={`browse_${m.anikume_id || m.id || "card"}_${idx}`} m={m} index={idx} />
+            ? Array.from({ length: 18 }).map((_, i) => (
+                <div key={i} className="w-full">
+                  <div
+                    className="w-full rounded-xl skeleton-box"
+                    style={{ paddingBottom: "140%" }}
+                  />
+                  <div className="mt-3 h-4 w-3/4 skeleton-text" />
+                  <div className="mt-1.5 h-3 w-1/2 skeleton-text opacity-70" />
+                </div>
+              ))
+            : data?.results?.map((m: any) => (
+                <Link
+                  key={m.anikume_id || m.id}
+                  to="/anime/$id"
+                  params={{ id: encodeId(m.anikume_id || m.id, "anime") }}
+                  className="group block transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <div
+                    className="relative w-full overflow-hidden rounded-lg bg-card ring-1 ring-white/5 shadow-lg transition group-hover:ring-primary/60"
+                    style={{ paddingBottom: "140%" }}
+                  >
+                    <img
+                      src={m.poster || m.coverImage?.large}
+                      alt={titleOf(m)}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 block size-full object-cover transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-sm"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                    {(m.is_adult ||
+                      m.isAdult ||
+                      (m.genres || []).some(
+                        (g: string) => g.toLowerCase() === "hentai" || g.toLowerCase() === "adult",
+                      )) && (
+                      <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-md bg-red-600/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur">
+                        18+
+                      </span>
+                    )}
+
+                    <span className="absolute bottom-2 right-2 grid size-9 translate-y-2 place-items-center rounded-full bg-foreground text-background opacity-0 shadow-[var(--shadow-glow)] transition group-hover:translate-y-0 group-hover:opacity-100">
+                      <Play className="size-4 fill-current" />
+                    </span>
+                  </div>
+
+                  <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug text-foreground/90 group-hover:text-foreground">
+                    {titleOf(m)}
+                  </h3>
+                  <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
+                    {m.format || prettyFormat(m) || "—"}
+                  </p>
+                </Link>
               ))}
         </div>
 
@@ -192,82 +228,6 @@ function BrowsePage() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-function BrowseCard({ m }: { m: any }) {
-  const posterRef = useRef<HTMLDivElement>(null);
-  const { startPosterTransition, activeId } = usePosterTransition();
-  const navigate = Route.useNavigate();
-  const isCurrentlyMorphing = String(activeId) === String(m.anikume_id || m.id);
-
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-
-    e.preventDefault();
-    const el = posterRef.current || (e.currentTarget.querySelector("div") as HTMLElement);
-    const targetUrl = `/anime/${encodeId(m.anikume_id || m.id, "anime")}`;
-
-    if (el) {
-      startPosterTransition({
-        id: m.anikume_id || m.id,
-        poster: m.poster || m.coverImage?.large || "",
-        element: el,
-        targetUrl,
-      });
-    } else {
-      navigate({
-        to: "/anime/$id",
-        params: { id: encodeId(m.anikume_id || m.id, "anime") },
-      });
-    }
-  };
-
-  return (
-    <Link
-      to="/anime/$id"
-      params={{ id: encodeId(m.anikume_id || m.id, "anime") }}
-      onClick={handleClick}
-      className="group block transition-transform duration-200 hover:-translate-y-1 cursor-pointer select-none"
-    >
-      <div
-        ref={posterRef}
-        className={`relative w-full overflow-hidden rounded-lg bg-card ring-1 ring-white/5 shadow-lg transition group-hover:ring-primary/60 ${
-          isCurrentlyMorphing ? "opacity-0" : "opacity-100"
-        }`}
-        style={{ paddingBottom: "140%" }}
-      >
-        <img
-          src={m.poster || m.coverImage?.large}
-          alt={titleOf(m)}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 block size-full object-cover transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-sm"
-        />
-        <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-        {(m.is_adult ||
-          m.isAdult ||
-          (m.genres || []).some(
-            (g: string) => g.toLowerCase() === "hentai" || g.toLowerCase() === "adult",
-          )) && (
-          <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-md bg-red-600/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur">
-            18+
-          </span>
-        )}
-
-        <span className="absolute bottom-2 right-2 grid size-9 translate-y-2 place-items-center rounded-full bg-foreground text-background opacity-0 shadow-[var(--shadow-glow)] transition group-hover:translate-y-0 group-hover:opacity-100">
-          <Play className="size-4 fill-current" />
-        </span>
-      </div>
-
-      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug text-foreground/90 group-hover:text-foreground">
-        {titleOf(m)}
-      </h3>
-      <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-        {m.format || prettyFormat(m) || "—"}
-      </p>
-    </Link>
   );
 }
 

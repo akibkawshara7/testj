@@ -37,7 +37,11 @@ import {
 import type { MediaPlayerElement } from "@vidstack/react";
 import { DefaultVideoLayout, DefaultTooltip } from "@vidstack/react/player/layouts/default";
 import { customVidstackIcons } from "@/lib/vidstack-icons";
-import { CameraIcon, SeekBackward10Icon, SeekForward10Icon } from "@vidstack/react/icons";
+import {
+  CameraIcon,
+  SeekBackward10Icon,
+  SeekForward10Icon,
+} from "@vidstack/react/icons";
 import "@vidstack/react/player/styles/default/theme.css";
 import "@vidstack/react/player/styles/default/layouts/video.css";
 import { createClientHlsBlobUrl } from "@/lib/client-hls-loader";
@@ -375,29 +379,20 @@ function PlayRoutePage() {
   // Subscribe to Player State
   useEffect(() => {
     if (!playerRef.current) return;
-    return playerRef.current.subscribe(
-      ({ currentTime, duration, quality, autoQuality, qualities, audioTracks, paused }: any) => {
-        const qHint =
-          quality && !autoQuality
-            ? `${quality.height}p`
-            : autoQuality && quality
-              ? `Auto (${quality.height}p)`
-              : "Auto";
-        const qList = qualities ? Array.from(qualities).map((q: any) => `${q.height}p`) : [];
-        const aList = audioTracks
-          ? Array.from(audioTracks).map((a: any) => a.label || a.language || "Track")
-          : [];
+    return playerRef.current.subscribe(({ currentTime, duration, quality, autoQuality, qualities, audioTracks, paused }: any) => {
+      const qHint = quality && !autoQuality ? `${quality.height}p` : autoQuality && quality ? `Auto (${quality.height}p)` : "Auto";
+      const qList = qualities ? Array.from(qualities).map((q: any) => `${q.height}p`) : [];
+      const aList = audioTracks ? Array.from(audioTracks).map((a: any) => a.label || a.language || "Track") : [];
 
-        setPlayerInfo({
-          duration: duration || 0,
-          currentTime: currentTime || 0,
-          quality: qHint,
-          qualities: qList,
-          audioTracks: aList,
-          paused: !!paused,
-        });
-      },
-    );
+      setPlayerInfo({
+        duration: duration || 0,
+        currentTime: currentTime || 0,
+        quality: qHint,
+        qualities: qList,
+        audioTracks: aList,
+        paused: !!paused,
+      });
+    });
   }, [activeUrl]);
 
   // Copy shareable link
@@ -478,9 +473,7 @@ function PlayRoutePage() {
                 title="Toggle Method 4 (In-Memory Blob URL / 0 Cloudflare Requests)"
               >
                 <Sparkles className="size-3.5 text-emerald-400" />
-                <span>
-                  Method 4: {useMethod4Blob ? "Active (Blob Memory)" : "Disabled (Direct)"}
-                </span>
+                <span>Method 4: {useMethod4Blob ? "Active (Blob Memory)" : "Disabled (Direct)"}</span>
               </button>
 
               {activeUrl && (
@@ -510,11 +503,7 @@ function PlayRoutePage() {
                     className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
                     title="Copy Shareable Link"
                   >
-                    {copiedLink ? (
-                      <Check className="size-3.5 text-emerald-400" />
-                    ) : (
-                      <Share2 className="size-3.5" />
-                    )}
+                    {copiedLink ? <Check className="size-3.5 text-emerald-400" /> : <Share2 className="size-3.5" />}
                     <span className="hidden sm:inline">{copiedLink ? "Copied" : "Share"}</span>
                   </button>
 
@@ -732,8 +721,7 @@ function PlayRoutePage() {
                 </div>
                 <h2 className="text-lg font-semibold text-white">No Stream URL Selected</h2>
                 <p className="mt-1.5 max-w-md text-sm text-slate-400">
-                  Enter an HLS stream URL in the input field above, or click one of the quick test
-                  presets below to start playback.
+                  Enter an HLS stream URL in the input field above, or click one of the quick test presets below to start playback.
                 </p>
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
                   {PRESET_STREAMS.slice(0, 2).map((p) => (
@@ -840,9 +828,7 @@ function PlayRoutePage() {
                       <span className="truncate max-w-[240px] font-mono text-[10px] opacity-70">
                         {preset.url}
                       </span>
-                      <span className="font-medium text-rose-400 group-hover:underline">
-                        Load Stream →
-                      </span>
+                      <span className="font-medium text-rose-400 group-hover:underline">Load Stream →</span>
                     </div>
                   </div>
                 );
@@ -854,24 +840,18 @@ function PlayRoutePage() {
               <div className="flex items-start gap-2.5">
                 <Info className="size-4 shrink-0 text-slate-400 mt-0.5" />
                 <div className="text-xs text-slate-400 space-y-1.5 leading-relaxed">
-                  <p className="font-semibold text-slate-300">
-                    Query Parameters supported on /play:
+                  <p className="font-semibold text-slate-300">Query Parameters supported on /play:</p>
+                  <p>
+                    <code className="text-rose-400 font-mono">?url=</code>: The HLS (.m3u8) or video stream source URL (required).
                   </p>
                   <p>
-                    <code className="text-rose-400 font-mono">?url=</code>: The HLS (.m3u8) or video
-                    stream source URL (required).
+                    <code className="text-rose-400 font-mono">?title=</code>: Optional title to display on the video overlay.
                   </p>
                   <p>
-                    <code className="text-rose-400 font-mono">?title=</code>: Optional title to
-                    display on the video overlay.
+                    <code className="text-rose-400 font-mono">?poster=</code>: Optional image URL for the player poster/thumbnail.
                   </p>
                   <p>
-                    <code className="text-rose-400 font-mono">?poster=</code>: Optional image URL
-                    for the player poster/thumbnail.
-                  </p>
-                  <p>
-                    <code className="text-rose-400 font-mono">?sub=</code>: Optional VTT/subtitle
-                    caption URL.
+                    <code className="text-rose-400 font-mono">?sub=</code>: Optional VTT/subtitle caption URL.
                   </p>
                 </div>
               </div>

@@ -29,7 +29,13 @@ import {
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { toast } from "sonner";
-import { MediaPlayer, MediaProvider, Poster, Track, isHLSProvider } from "@vidstack/react";
+import {
+  MediaPlayer,
+  MediaProvider,
+  Poster,
+  Track,
+  isHLSProvider,
+} from "@vidstack/react";
 import type { MediaPlayerElement, MediaProviderAdapter } from "@vidstack/react";
 import { DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
 import { customVidstackIcons } from "@/lib/vidstack-icons";
@@ -118,9 +124,7 @@ function TestProxyRoutePage() {
   const [autoplay, setAutoplay] = useState(search.autoplay !== false);
 
   // Service Worker State
-  const [swStatus, setSwStatus] = useState<"checking" | "registered" | "unsupported" | "error">(
-    "checking",
-  );
+  const [swStatus, setSwStatus] = useState<"checking" | "registered" | "unsupported" | "error">("checking");
   const [swControllerActive, setSwControllerActive] = useState(false);
   const [swReadyForPlayback, setSwReadyForPlayback] = useState(false);
   const [swMessage, setSwMessage] = useState("");
@@ -238,7 +242,9 @@ function TestProxyRoutePage() {
     if (!search.proxy) {
       // Direct Mode
       const isM3U8 =
-        cleanUrl.endsWith(".m3u8") || cleanUrl.includes(".m3u8") || cleanUrl.includes("playlist");
+        cleanUrl.endsWith(".m3u8") ||
+        cleanUrl.includes(".m3u8") ||
+        cleanUrl.includes("playlist");
 
       return {
         src: cleanUrl,
@@ -249,7 +255,9 @@ function TestProxyRoutePage() {
     // Service Worker Media Proxy Mode
     const cleanLower = cleanUrl.split("?")[0].toLowerCase();
     const isM3U8 =
-      cleanLower.endsWith(".m3u8") || cleanUrl.includes(".m3u8") || cleanUrl.includes("playlist");
+      cleanLower.endsWith(".m3u8") ||
+      cleanUrl.includes(".m3u8") ||
+      cleanUrl.includes("playlist");
 
     let proxyPath = "/sw-proxy/playlist.m3u8";
     if (!isM3U8 && (cleanLower.endsWith(".mp4") || cleanLower.endsWith(".m4s"))) {
@@ -309,7 +317,7 @@ function TestProxyRoutePage() {
         setHlsHandlerActive(false);
       }
     },
-    [search.ref],
+    [search.ref]
   );
 
   // Subscribe to Player telemetry
@@ -331,8 +339,8 @@ function TestProxyRoutePage() {
           quality && !autoQuality
             ? `${quality.height}p`
             : autoQuality && quality
-              ? `Auto (${quality.height}p)`
-              : "Auto";
+            ? `Auto (${quality.height}p)`
+            : "Auto";
         const qList = qualities ? Array.from(qualities).map((q: any) => `${q.height}p`) : [];
         const aList = audioTracks
           ? Array.from(audioTracks).map((a: any) => a.label || a.language || "Track")
@@ -359,7 +367,7 @@ function TestProxyRoutePage() {
           bandwidth: 0,
           live: !!live,
         });
-      },
+      }
     );
   }, [mediaSource]);
 
@@ -385,7 +393,7 @@ function TestProxyRoutePage() {
 
       toast.success("Stream configuration loaded!");
     },
-    [inputUrl, inputRef, inputSub, useProxy, autoplay, navigate],
+    [inputUrl, inputRef, inputSub, useProxy, autoplay, navigate]
   );
 
   const handleSelectPreset = (preset: (typeof PRESET_TEST_STREAMS)[0]) => {
@@ -450,23 +458,11 @@ function TestProxyRoutePage() {
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--brand,#df7426)]/10 text-[var(--brand,#df7426)] border border-[var(--brand,#df7426)]/20">
                 <Radio className="size-3 animate-pulse" /> Client-Side Media Engine
               </span>
-              <span className="text-xs text-muted-foreground font-mono">
-                0 Cloudflare Requests · 100% In-Browser
-              </span>
+              <span className="text-xs text-muted-foreground font-mono">0 Cloudflare Requests · 100% In-Browser</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              HLS Client-Side Media Proxy Lab
-            </h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">HLS Client-Side Media Proxy Lab</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Browser Service Worker intercepts{" "}
-              <code className="text-xs px-1.5 py-0.5 rounded bg-card border border-border">
-                /sw-proxy/*
-              </code>
-              , rewrites{" "}
-              <code className="text-xs px-1.5 py-0.5 rounded bg-card border border-border">
-                .m3u8
-              </code>{" "}
-              segment graphs, and streams directly into Vidstack.
+              Browser Service Worker intercepts <code className="text-xs px-1.5 py-0.5 rounded bg-card border border-border">/sw-proxy/*</code>, rewrites <code className="text-xs px-1.5 py-0.5 rounded bg-card border border-border">.m3u8</code> segment graphs, and streams directly into Vidstack.
             </p>
           </div>
 
@@ -488,17 +484,15 @@ function TestProxyRoutePage() {
                       swStatus === "registered" && swControllerActive
                         ? "text-emerald-400"
                         : swStatus === "error"
-                          ? "text-rose-400"
-                          : "text-amber-400"
+                        ? "text-rose-400"
+                        : "text-amber-400"
                     }
                   >
                     {swControllerActive ? "ACTIVE & CONTROLLING" : swStatus.toUpperCase()}
                   </span>
                 </div>
                 <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                  <span
-                    className={`size-1.5 rounded-full ${hlsHandlerActive ? "bg-emerald-400" : "bg-muted-foreground"}`}
-                  />
+                  <span className={`size-1.5 rounded-full ${hlsHandlerActive ? "bg-emerald-400" : "bg-muted-foreground"}`} />
                   Video Handler: {hlsHandlerActive ? "Vidstack HLS Connected" : "Awaiting Media"}
                 </div>
               </div>
@@ -523,12 +517,8 @@ function TestProxyRoutePage() {
                 !swReadyForPlayback && useProxy ? (
                   <div className="flex flex-col items-center justify-center gap-3 text-center p-6">
                     <RefreshCw className="size-8 text-[var(--brand,#df7426)] animate-spin" />
-                    <div className="text-sm font-semibold text-foreground">
-                      Initializing Client-Side Video Handler...
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Synchronizing Service Worker interceptor thread
-                    </div>
+                    <div className="text-sm font-semibold text-foreground">Initializing Client-Side Video Handler...</div>
+                    <div className="text-xs text-muted-foreground">Synchronizing Service Worker interceptor thread</div>
                   </div>
                 ) : (
                   <MediaPlayer
@@ -544,8 +534,7 @@ function TestProxyRoutePage() {
                       const msg =
                         typeof err === "string"
                           ? err
-                          : err?.message ||
-                            (err?.detail?.message ?? "Failed to decode/load video stream");
+                          : err?.message || (err?.detail?.message ?? "Failed to decode/load video stream");
                       console.error("[Vidstack Player Error]", msg);
                       setPlayerError(msg);
                     }}
@@ -561,7 +550,7 @@ function TestProxyRoutePage() {
                           src={
                             search.proxy
                               ? `/sw-proxy/subtitles.vtt?url=${encodeURIComponent(search.sub)}&ref=${encodeURIComponent(
-                                  search.ref || "",
+                                  search.ref || ""
                                 )}`
                               : search.sub
                           }
@@ -588,8 +577,7 @@ function TestProxyRoutePage() {
                   <FileVideo className="size-16 mx-auto text-muted-foreground/40 mb-3" />
                   <h3 className="text-lg font-semibold text-foreground">No Stream Loaded</h3>
                   <p className="text-xs text-muted-foreground mt-1 mb-4">
-                    Enter a target .m3u8 playlist URL or pick a preset stream below to test the
-                    zero-server client-side media proxy.
+                    Enter a target .m3u8 playlist URL or pick a preset stream below to test the zero-server client-side media proxy.
                   </p>
                   <button
                     onClick={() => handleSelectPreset(PRESET_TEST_STREAMS[0])}
@@ -629,9 +617,7 @@ function TestProxyRoutePage() {
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                      {useProxy
-                        ? "Proxied Client-Side via Service Worker"
-                        : "Direct Stream (No Proxy)"}
+                      {useProxy ? "Proxied Client-Side via Service Worker" : "Direct Stream (No Proxy)"}
                     </span>
                   </div>
 
@@ -641,11 +627,7 @@ function TestProxyRoutePage() {
                         onClick={handleCopyProxyUrl}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors cursor-pointer"
                       >
-                        {copied ? (
-                          <Check className="size-3 text-emerald-400" />
-                        ) : (
-                          <Copy className="size-3" />
-                        )}
+                        {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
                         {copied ? "Copied" : "Copy Proxied URL"}
                       </button>
                     )}
@@ -662,20 +644,14 @@ function TestProxyRoutePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div className="space-y-1">
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      Effective Player Source:
-                    </span>
+                    <span className="text-[11px] font-medium text-muted-foreground">Effective Player Source:</span>
                     <div className="font-mono text-[11px] p-2 rounded-lg bg-background/80 border border-border/60 break-all select-all">
-                      {typeof mediaSource?.src === "string"
-                        ? mediaSource.src
-                        : mediaSource?.src?.src || "None"}
+                      {typeof mediaSource?.src === "string" ? mediaSource.src : mediaSource?.src?.src || "None"}
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      Original Target URL:
-                    </span>
+                    <span className="text-[11px] font-medium text-muted-foreground">Original Target URL:</span>
                     <div className="font-mono text-[11px] p-2 rounded-lg bg-background/80 border border-border/60 break-all select-all">
                       {search.url}
                     </div>
@@ -684,9 +660,7 @@ function TestProxyRoutePage() {
 
                 {search.ref && (
                   <div className="text-xs space-y-1">
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      Spoofed Referer / Context:
-                    </span>
+                    <span className="text-[11px] font-medium text-muted-foreground">Spoofed Referer / Context:</span>
                     <div className="font-mono text-[11px] p-2 rounded-lg bg-background/80 border border-border/60 break-all select-all text-amber-400/90">
                       {search.ref}
                     </div>
@@ -700,27 +674,20 @@ function TestProxyRoutePage() {
                     <span className="font-semibold text-foreground">{hlsEngineStats.quality}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-background/50 border border-border/40">
-                    <span className="text-[10px] text-muted-foreground block">
-                      Available Tracks
-                    </span>
+                    <span className="text-[10px] text-muted-foreground block">Available Tracks</span>
                     <span className="font-semibold text-foreground">
-                      {hlsEngineStats.qualities.length > 0
-                        ? `${hlsEngineStats.qualities.length} Resolutions`
-                        : "Single Stream"}
+                      {hlsEngineStats.qualities.length > 0 ? `${hlsEngineStats.qualities.length} Resolutions` : "Single Stream"}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-background/50 border border-border/40">
                     <span className="text-[10px] text-muted-foreground block">Buffer Ahead</span>
                     <span className="font-semibold text-foreground">
-                      {Math.max(0, hlsEngineStats.buffered - hlsEngineStats.currentTime).toFixed(1)}
-                      s
+                      {Math.max(0, hlsEngineStats.buffered - hlsEngineStats.currentTime).toFixed(1)}s
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-background/50 border border-border/40">
                     <span className="text-[10px] text-muted-foreground block">Server Hits</span>
-                    <span className="font-semibold text-emerald-400 font-mono">
-                      0 (All in Browser)
-                    </span>
+                    <span className="font-semibold text-emerald-400 font-mono">0 (All in Browser)</span>
                   </div>
                 </div>
               </div>
@@ -731,9 +698,7 @@ function TestProxyRoutePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Terminal className="size-4 text-[var(--brand,#df7426)]" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider">
-                    Service Worker Media Traffic Inspector
-                  </h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider">Service Worker Media Traffic Inspector</h3>
                   <span className="text-[10px] px-1.5 py-0.2 rounded bg-muted font-mono text-muted-foreground">
                     {logs.length} events
                   </span>
@@ -751,8 +716,7 @@ function TestProxyRoutePage() {
 
               {logs.length === 0 ? (
                 <div className="py-6 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
-                  No requests intercepted yet. Play the video to capture live playlist rewrites and
-                  segment chunks.
+                  No requests intercepted yet. Play the video to capture live playlist rewrites and segment chunks.
                 </div>
               ) : (
                 <div className="max-h-60 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-1">
@@ -767,8 +731,8 @@ function TestProxyRoutePage() {
                             log.type === "m3u8"
                               ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                               : log.type === "vtt"
-                                ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                              ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                           }`}
                         >
                           {log.type.toUpperCase()}
@@ -779,8 +743,8 @@ function TestProxyRoutePage() {
                             log.status >= 200 && log.status < 300
                               ? "text-emerald-400"
                               : log.status === 0
-                                ? "text-rose-400"
-                                : "text-amber-400"
+                              ? "text-rose-400"
+                              : "text-amber-400"
                           }`}
                         >
                           {log.status === 0 ? "BLOCKED/FAIL" : log.status}
@@ -810,21 +774,13 @@ function TestProxyRoutePage() {
               </div>
               <ul className="list-disc list-inside space-y-1 pl-1">
                 <li>
-                  <strong>Direct In-Browser Interception:</strong> All requests to{" "}
-                  <code className="text-foreground">/sw-proxy/*</code> are captured locally inside
-                  the browser's Service Worker before touching any server network.
+                  <strong>Direct In-Browser Interception:</strong> All requests to <code className="text-foreground">/sw-proxy/*</code> are captured locally inside the browser's Service Worker before touching any server network.
                 </li>
                 <li>
-                  <strong>HLS Manifest Graph Rewriter:</strong> The Service Worker fetches{" "}
-                  <code className="text-foreground">.m3u8</code> playlists, resolves all relative
-                  paths, sub-playlists, and segment URIs, and transparently routes each segment back
-                  through the in-browser interceptor.
+                  <strong>HLS Manifest Graph Rewriter:</strong> The Service Worker fetches <code className="text-foreground">.m3u8</code> playlists, resolves all relative paths, sub-playlists, and segment URIs, and transparently routes each segment back through the in-browser interceptor.
                 </li>
                 <li>
-                  <strong>Synthetic CORS & Byte Seeking:</strong> Synthetic{" "}
-                  <code className="text-foreground">Access-Control-Allow-Origin: *</code> and{" "}
-                  <code className="text-foreground">Accept-Ranges: bytes</code> headers are
-                  generated to satisfy Vidstack's Media Source Extensions (MSE) pipeline.
+                  <strong>Synthetic CORS & Byte Seeking:</strong> Synthetic <code className="text-foreground">Access-Control-Allow-Origin: *</code> and <code className="text-foreground">Accept-Ranges: bytes</code> headers are generated to satisfy Vidstack's Media Source Extensions (MSE) pipeline.
                 </li>
               </ul>
             </div>
@@ -957,6 +913,6 @@ function logVideoHandler(...args: any[]) {
   console.log(
     "%c[Video-Handler]",
     "background: #10b981; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
-    ...args,
+    ...args
   );
 }

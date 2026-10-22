@@ -74,59 +74,37 @@ export function decodeId(encoded: string): number | string {
 
   if (encoded.startsWith("am") && encoded.length >= 8) {
     const obf = parseInt(encoded.slice(2), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return "am" + val;
-    }
+    if (!isNaN(obf)) return "am" + ((obf ^ XOR_KEY) >>> 0);
   }
   // Legacy aa- prefix (old J/anime MAL) → decode as am
   if (encoded.startsWith("aa") && encoded.length >= 8) {
     const obf = parseInt(encoded.slice(2), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return "am" + val;
-    }
+    if (!isNaN(obf)) return "am" + ((obf ^ XOR_KEY) >>> 0);
   }
   if (encoded.startsWith("a") && encoded.length === 8) {
     const obf = parseInt(encoded.slice(1), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return val;
-    }
+    if (!isNaN(obf)) return (obf ^ XOR_KEY) >>> 0;
   }
   if (encoded.startsWith("mmc") && encoded.length === 8) {
     const obf = parseInt(encoded.slice(3), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return "mmc" + val;
-    }
+    if (!isNaN(obf)) return "mmc" + ((obf ^ XOR_KEY) >>> 0);
   }
   if (encoded.startsWith("mm") && encoded.length === 8) {
     const obf = parseInt(encoded.slice(2), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return "mm" + val;
-    }
+    if (!isNaN(obf)) return "mm" + ((obf ^ XOR_KEY) >>> 0);
   }
   if (encoded.startsWith("mc") && encoded.length === 8) {
     const obf = parseInt(encoded.slice(2), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return "mc" + val;
-    }
+    if (!isNaN(obf)) return "mc" + ((obf ^ XOR_KEY) >>> 0);
   }
   if (encoded.startsWith("m") && encoded.length === 8) {
     const obf = parseInt(encoded.slice(1), 36);
-    if (!isNaN(obf)) {
-      const val = (obf ^ XOR_KEY) >>> 0;
-      if (val > 0) return val;
-    }
+    if (!isNaN(obf)) return (obf ^ XOR_KEY) >>> 0;
   }
 
   // Pure numeric string
   if (/^\d+$/.test(encoded)) {
-    const num = Number(encoded);
-    if (num > 0) return num;
+    return Number(encoded);
   }
 
   // Preserve as original string ID (e.g. AniKume ID 'Ygo3ckQHig')

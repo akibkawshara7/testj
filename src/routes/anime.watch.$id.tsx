@@ -119,21 +119,6 @@ import {
 import { fetchApikumeWatch } from "@/lib/apikume";
 
 export const Route = createFileRoute("/anime/watch/$id")({
-  loader: async ({ context: { queryClient }, params }) => {
-    const rawId = String(params.id);
-    let resolvedId: string | number = rawId;
-    const decoded = decodeId(rawId);
-    if (typeof decoded === "number" && !Number.isNaN(decoded) && decoded > 0) {
-      resolvedId = decoded;
-    } else if (typeof decoded === "string" && decoded.length > 0) {
-      resolvedId = decoded;
-    }
-    return queryClient.ensureQueryData({
-      queryKey: ["anime", resolvedId],
-      queryFn: () => fetchAnimeById(resolvedId),
-      staleTime: 1000 * 60 * 10,
-    });
-  },
   head: () => ({
     meta: [
       { title: `Watch Anime · AniKume` },
@@ -438,9 +423,7 @@ function WatchBody({
       for (const s of list) {
         if (!s) continue;
         const rawEmbed = typeof s.embed === "string" ? s.embed.trim() : "";
-        const rawHls = (s.hls || s.url || s.video || s.mp4 || s.file || s.src || "")
-          .toString()
-          .trim();
+        const rawHls = (s.hls || s.url || s.video || s.mp4 || s.file || s.src || "").toString().trim();
         const serverName = s.source || s.server || s.name || "Alpha";
 
         if (!rawHls && !rawEmbed) continue;
@@ -2194,18 +2177,17 @@ function NextEpisodeCountdown({
   nextEp: { episode: number; airingAt: number };
   banner: string | null;
 }) {
-  const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(() => nextEp.airingAt - Math.floor(Date.now() / 1000));
 
   useEffect(() => {
-    setMounted(true);
-    const update = () => setTimeLeft(nextEp.airingAt - Math.floor(Date.now() / 1000));
-    update();
-    const interval = setInterval(update, 1000);
+    setTimeLeft(nextEp.airingAt - Math.floor(Date.now() / 1000));
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
     return () => clearInterval(interval);
   }, [nextEp]);
 
-  if (!mounted || timeLeft <= 0) return null;
+  if (timeLeft <= 0) return null;
 
   const d = Math.floor(timeLeft / (3600 * 24));
   const h = Math.floor((timeLeft % (3600 * 24)) / 3600);
@@ -2217,10 +2199,7 @@ function NextEpisodeCountdown({
   parts.push(`${m}m`);
 
   return (
-    <div
-      suppressHydrationWarning
-      className="flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/5 bg-card/40 p-2 animate-in fade-in duration-300"
-    >
+    <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/5 bg-card/40 p-2 animate-in fade-in duration-300">
       <div className="relative grid aspect-video w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-black sm:w-36">
         {banner ? (
           <img
@@ -2239,10 +2218,8 @@ function NextEpisodeCountdown({
         </span>
       </div>
       <div className="min-w-0 flex-1 pr-2">
-        <p suppressHydrationWarning className="truncate text-sm font-bold">
-          Soon in {parts.join(" ")}
-        </p>
-        <p suppressHydrationWarning className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:text-xs">
+        <p className="truncate text-sm font-bold">Soon in {parts.join(" ")}</p>
+        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:text-xs">
           {new Date(nextEp.airingAt * 1000).toLocaleString()}
         </p>
       </div>
@@ -2351,13 +2328,9 @@ function AnimeDetails({ m }: { m: AnilistMedia }) {
     <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-card/40">
       <div className="relative z-10 p-4 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
         {/* Poster */}
-        <Link
-          to="/anime/$id"
-          params={{ id: encodeId(m.id, "anime") }}
-          className="relative shrink-0 h-[180px] w-[120px] sm:h-[220px] sm:w-[150px] overflow-hidden rounded-xl shadow-2xl shadow-black/50 border border-white/5 cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
-        >
+        <div className="relative shrink-0 h-[180px] w-[120px] sm:h-[220px] sm:w-[150px] overflow-hidden rounded-xl shadow-2xl shadow-black/50 border border-white/5">
           <img src={poster} alt="" className="h-full w-full object-cover" />
-        </Link>
+        </div>
 
         <div className="flex flex-col w-full min-w-0">
           {/* Title & Show Info button */}
@@ -2474,9 +2447,9 @@ function RelatedRow({ relations }: { relations: { relationType: string; node: An
   return (
     <div className="-mt-6">
       <AnimeRowShell>
-        {all.map((item, idx) => (
+        {all.map((item) => (
           <div
-            key={`watch_rec_${item.media.id || "card"}_${idx}`}
+            key={item.media.id}
             className="group/badge relative shrink-0 snap-start w-[130px] sm:w-[165px] lg:w-[190px]"
           >
             <AnimeCard media={item.media} badge={null} />

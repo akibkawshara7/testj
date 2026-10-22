@@ -4,7 +4,7 @@ import type { ApikumeAnimeItem } from "@/lib/apikume";
 import { apikumeTitle } from "@/lib/apikume";
 import { getStatusBgColor } from "@/lib/utils";
 
-export function AnimeCard({ item }: { item: ApikumeAnimeItem }) {
+export function ApikumeAnimeCard({ item }: { item: ApikumeAnimeItem }) {
   const title = apikumeTitle(item.title);
   const statusColor = getStatusBgColor(item.status);
 
@@ -12,7 +12,7 @@ export function AnimeCard({ item }: { item: ApikumeAnimeItem }) {
     <Link
       to="/anime/$id"
       params={{ id: item.anikume_id }}
-      className="group block w-[130px] shrink-0 snap-start transition-transform duration-150 ease-out active:scale-95 hover:-translate-y-1 sm:w-[165px] lg:w-[190px] cursor-pointer select-none"
+      className="group block w-[130px] shrink-0 snap-start transition-transform duration-300 hover:-translate-y-1 sm:w-[165px] lg:w-[190px]"
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-card/60 ring-1 ring-white/5 shadow-lg transition group-hover:ring-primary/60">
         <img
@@ -49,5 +49,3 @@ export function AnimeCard({ item }: { item: ApikumeAnimeItem }) {
     </Link>
   );
 }
-
-export { AnimeCard as ApikumeAnimeCard };

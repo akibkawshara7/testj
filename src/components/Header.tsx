@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Search, Home, Compass, Calendar, User, Bell, LogOut, Settings, LogIn } from "lucide-react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import {
+  Search,
+  Home,
+  Compass,
+  Calendar,
+  User,
+  Bell,
+  LogOut,
+  Settings,
+  LogIn,
+} from "lucide-react";
 import { Logo } from "./Logo";
 import { SearchModal, useSearchHotkey } from "./SearchModal";
 import * as Popover from "@radix-ui/react-popover";
@@ -19,7 +29,26 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Home", to: "/", icon: Home, exact: true },
   { label: "Browse", to: "/anime/browse", icon: Compass },
+  { label: "Schedule", to: "/anime/schedule", icon: Calendar },
+  { label: "Notifications", to: "/notification", icon: Bell },
 ];
+
+function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 40) setHidden(false);
+      else if (y > last + 12) setHidden(true);
+      else if (y < last - 8) setHidden(false);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
+}
 
 export function useAppMode() {
   return false; // App is exclusively Anime
@@ -136,10 +165,16 @@ function UserMenuPopover() {
 export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   useSearchHotkey(() => setSearchOpen(true));
+  const hidden = useHideOnScroll();
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50">
+      <header
+        className={
+          "fixed inset-x-0 top-0 z-50 transition-transform duration-300 will-change-transform " +
+          (hidden ? "-translate-y-full" : "translate-y-0")
+        }
+      >
         <div className="mx-auto flex max-w-[1500px] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
           <Logo className="shrink-0" />
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
@@ -159,11 +194,11 @@ export function Header() {
 
 function BottomNav() {
   return (
-    <nav className="fixed bottom-2.5 left-1/2 z-50 -translate-x-1/2 duration-300 animate-in fade-in slide-in-from-bottom-4 sm:bottom-4">
-      <div className="flex items-center gap-1 rounded-full bg-black/80 p-1 ring-1 ring-white/10 backdrop-blur-md sm:gap-1.5 sm:p-1.5">
+    <nav className="fixed bottom-3 left-1/2 z-50 -translate-x-1/2 duration-300 animate-in fade-in slide-in-from-bottom-4 sm:bottom-5">
+      <div className="flex items-center gap-1 rounded-full bg-black/80 p-1.5 ring-1 ring-white/10 backdrop-blur-md sm:gap-2 sm:p-2">
         {navItems.map((n, idx) => {
           const Icon = n.icon;
-          const cls = "grid size-8 sm:size-9 place-items-center rounded-full transition-colors";
+          const cls = "grid size-10 place-items-center rounded-full transition-colors sm:size-11";
           return (
             <Link
               key={idx}
@@ -176,7 +211,7 @@ function BottomNav() {
                 " text-muted-foreground hover:bg-white/10 hover:text-foreground data-[status=active]:bg-white/15 data-[status=active]:text-foreground"
               }
             >
-              <Icon className="size-4" />
+              <Icon className="size-[18px]" />
             </Link>
           );
         })}
@@ -201,7 +236,7 @@ function IconBtn({
       aria-label={label}
       title={title ?? label}
       onClick={onClick}
-      className="relative grid size-11 place-items-center rounded-full bg-white/5 text-foreground/80 ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/10 hover:text-foreground cursor-pointer"
+      className="relative grid size-11 place-items-center rounded-full bg-white/5 text-foreground/80 ring-1 ring-white/10 backdrop-blur-md transition hover:bg-white/10 hover:text-foreground"
     >
       {children}
     </button>

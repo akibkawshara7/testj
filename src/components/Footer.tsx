@@ -55,8 +55,9 @@ export function Footer() {
           <div className="md:col-span-3">
             <Logo />
             <p className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground">
-              AniKume is your ad-free destination for discovering and streaming anime. We do not
-              host any files ourselves; all content is provided by non-affiliated third parties.
+              AniKume is your ad-free destination for discovering and streaming anime. We
+              do not host any files ourselves; all content is provided by non-affiliated third
+              parties.
             </p>
             <div className="mt-6 flex items-center gap-4">
               <a

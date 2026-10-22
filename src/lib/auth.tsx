@@ -301,13 +301,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (data.user) {
           const tursoContinue = data.user.continue || { anime: [], manga: [] };
           const dbLastSaved = Number(tursoContinue.lastSaved || 0);
-
+          
           let localLastSaved = Number(localStorage.getItem("continue_last_save_time") || 0);
           const cleanLocal = getCleanLocalContinue();
           const maxLocalUpdate = Math.max(
             0,
             ...cleanLocal.anime.map((a) => a.updatedAt || 0),
-            ...cleanLocal.manga.map((m) => m.updatedAt || 0),
+            ...cleanLocal.manga.map((m) => m.updatedAt || 0)
           );
           localLastSaved = Math.max(localLastSaved, maxLocalUpdate);
 
@@ -328,10 +328,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             fetch("/api/auth/save-continue", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userId: data.user.id,
-                continueData: { ...cleanLocal, lastSaved: localLastSaved },
-              }),
+              body: JSON.stringify({ userId: data.user.id, continueData: { ...cleanLocal, lastSaved: localLastSaved } }),
             }).catch((e) => console.warn("Initial sync up error:", e));
           }
 
@@ -386,7 +383,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const maxLocalUpdate = Math.max(
         0,
         ...cleanLocal.anime.map((a) => a.updatedAt || 0),
-        ...cleanLocal.manga.map((m) => m.updatedAt || 0),
+        ...cleanLocal.manga.map((m) => m.updatedAt || 0)
       );
       localLastSaved = Math.max(localLastSaved, maxLocalUpdate);
 
@@ -408,10 +405,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/auth/save-continue", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: data.user.id,
-            continueData: { ...cleanLocal, lastSaved: localLastSaved },
-          }),
+          body: JSON.stringify({ userId: data.user.id, continueData: { ...cleanLocal, lastSaved: localLastSaved } }),
         }).catch((e) => console.warn("Initial sync up error:", e));
       }
 

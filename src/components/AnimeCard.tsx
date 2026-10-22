@@ -9,10 +9,9 @@ type Props = {
   /** kept for API compatibility; badges are no longer rendered. */
   badge?: "episode" | "soon" | null;
   type?: "anime" | "manga";
-  tag?: string;
 };
 
-export function AnimeCard({ media, type: overrideType, tag }: Props) {
+export function AnimeCard({ media, type: overrideType }: Props) {
   const isManga =
     overrideType === "manga" ||
     media.format === "MANGA" ||
@@ -29,7 +28,7 @@ export function AnimeCard({ media, type: overrideType, tag }: Props) {
     <Link
       to={isManga ? "/manga/$id" : "/anime/$id"}
       params={{ id: encodeId(media.id, isManga ? "manga" : "anime") }}
-      className="group block w-[130px] shrink-0 snap-start transition-transform duration-150 ease-out active:scale-95 hover:-translate-y-1 sm:w-[165px] lg:w-[190px] cursor-pointer select-none"
+      className="group block w-[130px] shrink-0 snap-start transition-transform duration-300 hover:-translate-y-1 sm:w-[165px] lg:w-[190px]"
     >
       <div
         className="relative w-full overflow-hidden rounded-lg bg-card ring-1 ring-white/5 shadow-lg transition group-hover:ring-primary/60"
@@ -47,12 +46,6 @@ export function AnimeCard({ media, type: overrideType, tag }: Props) {
         {isAdultTag && (
           <span className="pointer-events-none absolute left-2 top-2 z-10 rounded-md bg-red-600/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur">
             18+
-          </span>
-        )}
-
-        {tag && (
-          <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-md bg-black/75 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur border border-white/10">
-            {tag}
           </span>
         )}
 

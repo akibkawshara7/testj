@@ -113,36 +113,53 @@ export function apikumeTitle(title?: ApikumeTitle | null): string {
   return getPreferredTitle(title);
 }
 
-// In-session data persistence map: stores fetched endpoint response in memory
-const sessionPageStore = new Map<string, { data: any; timestamp: number }>();
+// In-session data persistence map: stores every fetched endpoint response in active session memory
+const sessionPageStore = new Map<string, any>();
 const inFlightPromises = new Map<string, Promise<any>>();
 
+// Restore cached endpoints from sessionStorage if available
+if (typeof window !== "undefined") {
+  try {
+    const saved = sessionStorage.getItem("apikume_endpoint_cache");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      for (const [k, v] of Object.entries(parsed)) {
+        sessionPageStore.set(k, v);
+      }
+    }
+  } catch {}
+}
+
+function persistCacheToSession() {
+  if (typeof window === "undefined") return;
+  try {
+    const obj: Record<string, any> = {};
+    // Only persist up to 200 items to avoid quota issues
+    let count = 0;
+    for (const [k, v] of sessionPageStore.entries()) {
+      if (count++ > 200) break;
+      obj[k] = v;
+    }
+    sessionStorage.setItem("apikume_endpoint_cache", JSON.stringify(obj));
+  } catch {}
+}
+
 export function getSessionEndpointData<T = any>(key: string): T | undefined {
-  const cached = sessionPageStore.get(key);
-  if (!cached) return undefined;
-  // Expire memory cache after 15 minutes
-  if (Date.now() - cached.timestamp > 15 * 60 * 1000) {
-    sessionPageStore.delete(key);
-    return undefined;
-  }
-  return cached.data as T;
+  return sessionPageStore.get(key);
 }
 
 export async function fetchApikumeEndpoint<T = any>(endpoint: string): Promise<T> {
-  const cached = sessionPageStore.get(endpoint);
-  if (cached && Date.now() - cached.timestamp < 15 * 60 * 1000) {
-    return cached.data as T;
+  // If already fetched in this session, return it instantly without any delay
+  if (sessionPageStore.has(endpoint)) {
+    return sessionPageStore.get(endpoint) as T;
   }
 
-  // Deduplicate concurrent requests
+  // If a request is currently in flight, deduplicate and reuse it
   if (inFlightPromises.has(endpoint)) {
     return inFlightPromises.get(endpoint) as Promise<T>;
   }
 
   const fetchPromise = (async () => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000); // 12s timeout
-
     try {
       const url =
         typeof window === "undefined"
@@ -153,16 +170,13 @@ export async function fetchApikumeEndpoint<T = any>(endpoint: string): Promise<T
 
       let res = await fetch(url, {
         headers: { Accept: "application/json" },
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeout));
+      });
 
       if (!res.ok && typeof window !== "undefined" && !url.startsWith("http")) {
-        const fallbackController = new AbortController();
-        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 12000);
+        // Direct fallback if proxy has an issue
         res = await fetch(`https://apikume.onrender.com${endpoint}`, {
           headers: { Accept: "application/json" },
-          signal: fallbackController.signal,
-        }).finally(() => clearTimeout(fallbackTimeout));
+        });
       }
 
       if (!res.ok) {
@@ -170,11 +184,9 @@ export async function fetchApikumeEndpoint<T = any>(endpoint: string): Promise<T
       }
 
       const data = await res.json();
-      sessionPageStore.set(endpoint, { data, timestamp: Date.now() });
+      sessionPageStore.set(endpoint, data);
+      persistCacheToSession();
       return data as T;
-    } catch (err) {
-      sessionPageStore.delete(endpoint);
-      throw err;
     } finally {
       inFlightPromises.delete(endpoint);
     }

@@ -124,9 +124,7 @@ export function IframeAdBlockPlayer({
           data.msg ||
           data.name ||
           ""
-        )
-          .toString()
-          .toLowerCase();
+        ).toString().toLowerCase();
 
         const currentTime =
           typeof data.time === "number"
@@ -178,10 +176,7 @@ export function IframeAdBlockPlayer({
       if (iframeRef.current?.contentWindow) {
         try {
           iframeRef.current.contentWindow.postMessage('{"action":"listen"}', "*");
-          iframeRef.current.contentWindow.postMessage(
-            '{"api":"addEventListener","event":"ended"}',
-            "*",
-          );
+          iframeRef.current.contentWindow.postMessage('{"api":"addEventListener","event":"ended"}', "*");
           iframeRef.current.contentWindow.postMessage('{"event":"listen"}', "*");
         } catch {}
       }

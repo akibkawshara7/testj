@@ -6,32 +6,7 @@ const ANILIST_URL = "https://graphql.anilist.co";
 async function fetchMal(endpoint: string) {
   // Strip leading slash if present to avoid double slash
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
-
-  // Guard against invalid endpoints like "anime/0" or "anime/undefined" or "manga/0"
-  if (
-    cleanEndpoint.includes("/0?") ||
-    cleanEndpoint.endsWith("/0") ||
-    cleanEndpoint.includes("/NaN") ||
-    cleanEndpoint.includes("/undefined") ||
-    cleanEndpoint.includes("/null")
-  ) {
-    throw new Error(`Invalid MAL endpoint: ${cleanEndpoint}`);
-  }
-
-  let url: string;
-  if (endpoint.startsWith("http")) {
-    url = endpoint;
-  } else {
-    // During SSR in Node.js, fetch requires an absolute URL
-    if (typeof window === "undefined") {
-      const baseUrl = process.env.VITE_APP_URL || process.env.VERCEL_URL || "http://localhost:3000";
-      const normalizedBase = baseUrl.startsWith("http") ? baseUrl : `http://${baseUrl}`;
-      url = `${normalizedBase}/api/mal/${cleanEndpoint}`;
-    } else {
-      url = `/api/mal/${cleanEndpoint}`;
-    }
-  }
-
+  const url = endpoint.startsWith("http") ? endpoint : `/api/mal/${cleanEndpoint}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`MAL API Error ${res.status}`);
   return res.json();
@@ -931,13 +906,12 @@ export async function fetchAnimeById(id: number | string): Promise<AnilistMedia>
   let media: AnilistMedia;
 
   if (isAmId) {
-    // Direct MAL fetch for am-prefixed IDs (e.g. am5114)
+    // Direct MAL fetch for am-prefixed IDs
     const malId = strId.slice(2);
-    if (/^\d+$/.test(malId) && Number(malId) > 0) {
-      const data = await fetchMal(
-        `/anime/${malId}?fields=id,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type,status,genres,my_list_status,num_episodes,start_season,broadcast,source,average_episode_duration,rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics`,
-      );
-      media = mapMalToAnilistMedia(data, "ANIME");
+    const data = await fetchMal(
+      `/anime/${malId}?fields=id,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type,status,genres,my_list_status,num_episodes,start_season,broadcast,source,average_episode_duration,rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics`,
+    );
+    media = mapMalToAnilistMedia(data, "ANIME");
 
     // Enrich with ani.zip using mal_id (since this is a MAL-sourced anime)
     const builtInLinks: AnilistMedia["externalLinks"] = [
@@ -987,13 +961,6 @@ export async function fetchAnimeById(id: number | string): Promise<AnilistMedia>
       // ani.zip enrichment is optional
     }
     media = { ...media, externalLinks: builtInLinks };
-    } else {
-      const apikumeData = await fetchApikumeDetail(strId);
-      if (apikumeData && (apikumeData.title || apikumeData.poster || apikumeData.synopsis)) {
-        return mapApikumeToAnilistMedia(apikumeData, strId);
-      }
-      throw new Error(`Invalid MAL anime ID: ${strId}`);
-    }
   } else {
     const numId = Number(strId);
     const q = `query ($id: Int) { Media(id: $id, type: ANIME) { ${DETAIL_FIELDS} } }`;
@@ -1063,22 +1030,14 @@ export async function fetchAnimeById(id: number | string): Promise<AnilistMedia>
         ],
       };
     } catch (e) {
-      console.warn("AniList fetchAnimeById failed, falling back to Apikume/MAL:", e);
-      try {
-        const apikumeData = await fetchApikumeDetail(strId);
-        if (apikumeData && (apikumeData.title || apikumeData.poster || apikumeData.synopsis)) {
-          return mapApikumeToAnilistMedia(apikumeData, strId);
-        }
-      } catch {}
-
-      if (numId > 0 && !Number.isNaN(numId)) {
-        const data = await fetchMal(
-          `/anime/${numId}?fields=id,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type,status,genres,my_list_status,num_episodes,start_season,broadcast,source,average_episode_duration,rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics`,
-        );
-        media = mapMalToAnilistMedia(data, "ANIME");
-      } else {
-        throw new Error(`Anime not found for ID: ${strId}`);
-      }
+      console.warn("AniList fetchAnimeById failed, falling back to MAL:", e);
+      // Use MAL directly — no ani.zip needed here
+      const malId: string | number = numId;
+      // If we somehow have idMal from a partial fetch, use it; otherwise use anilist id as MAL id
+      const data = await fetchMal(
+        `/anime/${malId}?fields=id,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,num_list_users,num_scoring_users,nsfw,created_at,updated_at,media_type,status,genres,my_list_status,num_episodes,start_season,broadcast,source,average_episode_duration,rating,pictures,background,related_anime,related_manga,recommendations,studios,statistics`,
+      );
+      media = mapMalToAnilistMedia(data, "ANIME");
     }
   }
 

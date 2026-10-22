@@ -8,12 +8,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import "@/lib/session";
 import { DebugTyper } from "@/components/DebugTyper";
 import { AuthProvider } from "@/lib/auth";
 import { AuthModal } from "@/components/AuthModal";
-import { TopLoadingBar } from "@/components/TopLoadingBar";
 
 import appCss from "../styles.css?url";
 
@@ -145,17 +144,13 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-import { SharedPosterTransitionProvider } from "@/lib/shared-poster-transition";
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SharedPosterTransitionProvider>
-          <AppContent />
-        </SharedPosterTransitionProvider>
+        <AppContent />
       </AuthProvider>
     </QueryClientProvider>
   );
@@ -164,7 +159,6 @@ function RootComponent() {
 function AppContent() {
   return (
     <>
-      <TopLoadingBar />
       <DebugTyper />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />

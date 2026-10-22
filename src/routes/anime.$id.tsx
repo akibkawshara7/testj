@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import {
@@ -74,24 +74,8 @@ import {
 } from "@/lib/anilist";
 import { encodeId, decodeId } from "@/lib/id-codec";
 import { getScoreColor, formatScore, formatStatus, getStatusColor } from "@/lib/utils";
-import { usePosterTransition } from "@/lib/shared-poster-transition";
 
 export const Route = createFileRoute("/anime/$id")({
-  loader: async ({ context: { queryClient }, params }) => {
-    const rawId = String(params.id);
-    let resolvedId: string | number = rawId;
-    const decoded = decodeId(rawId);
-    if (typeof decoded === "number" && !Number.isNaN(decoded) && decoded > 0) {
-      resolvedId = decoded;
-    } else if (typeof decoded === "string" && decoded.length > 0) {
-      resolvedId = decoded;
-    }
-    return queryClient.ensureQueryData({
-      queryKey: ["anime", resolvedId],
-      queryFn: () => fetchAnimeById(resolvedId),
-      staleTime: 1000 * 60 * 10,
-    });
-  },
   head: ({ params }) => ({
     meta: [
       { title: `Anime · AniKume` },
@@ -107,9 +91,9 @@ function AnimeDetail() {
   let resolvedId: string | number = rawId;
 
   const decoded = decodeId(rawId);
-  if (typeof decoded === "number" && !Number.isNaN(decoded) && decoded > 0) {
+  if (typeof decoded === "number" && !Number.isNaN(decoded)) {
     resolvedId = decoded;
-  } else if (typeof decoded === "string" && decoded.length > 0) {
+  } else if (typeof decoded === "string" && decoded.startsWith("am")) {
     resolvedId = decoded;
   } else {
     resolvedId = rawId;
@@ -131,6 +115,7 @@ function AnimeDetail() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main className="pb-6">
+        {isLoading && !m && <DetailSkeleton />}
         {error && (
           <p className="px-6 pt-32 text-center text-sm text-destructive">Failed to load anime.</p>
         )}
@@ -141,40 +126,102 @@ function AnimeDetail() {
   );
 }
 
+function DetailSkeleton() {
+  return (
+    <div>
+      {/* Banner Skeleton */}
+      <div className="relative h-[25vh] min-h-[220px] w-full skeleton-box border-none sm:h-[35vh]">
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
+        <div className="absolute -bottom-1 inset-x-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      </div>
+
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6">
+        <div className="relative z-10 -mt-24 sm:-mt-32 lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
+          {/* Poster Column */}
+          <div className="relative z-10 flex justify-center lg:block">
+            <div className="w-44 sm:w-52 lg:w-full">
+              <div className="aspect-[2/3] w-full rounded-2xl skeleton-box shadow-2xl" />
+            </div>
+          </div>
+
+          {/* Right Info Column */}
+          <div className="mt-5 text-center lg:mt-24 lg:text-left">
+            {/* Title Skeleton */}
+            <div className="h-8 w-3/4 max-w-md mx-auto sm:h-10 lg:mx-0 skeleton-text" />
+
+            {/* Badges Skeleton */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
+              <div className="h-7 w-16 rounded-xl skeleton-box" />
+              <div className="h-7 w-24 rounded-xl skeleton-box" />
+              <div className="h-7 w-28 rounded-xl skeleton-box" />
+              <div className="h-7 w-20 rounded-xl skeleton-box" />
+            </div>
+
+            {/* Action Buttons Skeleton */}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <div className="h-10 w-32 rounded-full skeleton-box" />
+              <div className="size-10 rounded-full skeleton-box" />
+              <div className="size-10 rounded-full skeleton-box" />
+            </div>
+          </div>
+        </div>
+
+        {/* Unified Tabs Bar Skeleton */}
+        <div className="mt-8 flex w-full max-w-[500px] items-center rounded-full border border-white/5 bg-zinc-950/60 p-1 mx-auto lg:mx-0">
+          <div className="h-7 w-1/4 rounded-full skeleton-box" />
+          <div className="flex-1 flex justify-center">
+            <div className="h-3 w-14 rounded-full bg-white/5" />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className="h-3 w-14 rounded-full bg-white/5" />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className="h-3 w-16 rounded-full bg-white/5" />
+          </div>
+        </div>
+
+        {/* Overview Tab Content Skeleton */}
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-10 lg:gap-8">
+          <div className="space-y-4 lg:col-span-6">
+            <div className="aspect-video w-full rounded-2xl skeleton-box" />
+            <div className="space-y-2 pt-2">
+              <div className="h-4 w-28 skeleton-text" />
+              <div className="h-4 w-full skeleton-text" />
+              <div className="h-4 w-full skeleton-text" />
+              <div className="h-4 w-4/5 skeleton-text" />
+              <div className="h-4 w-2/3 skeleton-text opacity-70" />
+            </div>
+          </div>
+          <div className="lg:col-span-4 space-y-4">
+            <div className="h-5 w-20 skeleton-text" />
+            <div className="flex flex-wrap gap-2">
+              <div className="h-7 w-20 rounded-full skeleton-box" />
+              <div className="h-7 w-24 rounded-full skeleton-box" />
+              <div className="h-7 w-16 rounded-full skeleton-box" />
+            </div>
+            <div className="h-5 w-24 skeleton-text pt-2" />
+            <div className="flex flex-wrap gap-2">
+              <div className="h-7 w-16 rounded-full skeleton-box" />
+              <div className="h-7 w-20 rounded-full skeleton-box" />
+              <div className="h-7 w-28 rounded-full skeleton-box" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const TABS = ["Overview", "Episodes", "Related", "Characters"] as const;
 type Tab = (typeof TABS)[number];
 
 function DetailBody({ m }: { m: AnilistMedia }) {
   const { toggleWatchlist, isInWatchlist } = useAuth();
-  const navigate = useNavigate();
-  const { registerDestinationPoster, activeId, activePosterUrl, isTransitioning } =
-    usePosterTransition();
   const [tab, setTab] = useState<Tab>("Overview");
   const [linksOpen, setLinksOpen] = useState(false);
   const isBookmarked = isInWatchlist(m.id, "anime");
   const score = m.averageScore ?? m.meanScore;
   const notReleased = m.status === "NOT_YET_RELEASED" || m.status?.toUpperCase() === "UPCOMING";
-
-  const posterRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (posterRef.current) {
-      registerDestinationPoster(m.id, posterRef.current);
-    }
-  }, [m.id, registerDestinationPoster]);
-
-  const handlePlayClick = useCallback(
-    (e: React.MouseEvent, hashTarget: string | number) => {
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-      e.preventDefault();
-      navigate({
-        to: "/anime/watch/$id",
-        params: { id: encodeId(m.id, "anime") },
-        hash: String(hashTarget),
-      });
-    },
-    [m.id, navigate],
-  );
 
   const isAdultTag =
     m.isAdult ||
@@ -182,18 +229,15 @@ function DetailBody({ m }: { m: AnilistMedia }) {
       (g: string) => g.toLowerCase() === "hentai" || g.toLowerCase() === "adult",
     );
 
-  const [continueWatchingItem, setContinueWatchingItem] = useState<{ episodeNum?: number } | null>(
-    null,
-  );
-
-  useEffect(() => {
+  const continueWatchingItem = useMemo(() => {
     try {
       const raw = localStorage.getItem("continue_watching_list");
       if (raw) {
         const list = JSON.parse(raw);
-        setContinueWatchingItem(list.find((item: any) => item.animeId === m.id) || null);
+        return list.find((item: any) => item.animeId === m.id);
       }
     } catch {}
+    return null;
   }, [m.id]);
 
   const continueEpNum = continueWatchingItem?.episodeNum;
@@ -272,22 +316,14 @@ function DetailBody({ m }: { m: AnilistMedia }) {
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6">
         <div className="relative z-10 -mt-24 sm:-mt-32 lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
           <div className="relative z-10 flex justify-center lg:block">
-            <div
-              ref={posterRef}
-              data-detail-poster="true"
-              className="relative aspect-[2/3] w-44 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 sm:w-52 lg:w-full group/cover"
-            >
+            <div className="relative group/cover">
               <img
-                src={
-                  String(activeId) === String(m.id) && activePosterUrl
-                    ? activePosterUrl
-                    : m.coverImage.extraLarge || m.coverImage.large
-                }
+                src={m.coverImage.extraLarge}
                 alt={titleOf(m)}
                 referrerPolicy="no-referrer"
-                decoding="sync"
+                decoding="async"
                 loading="eager"
-                className="size-full object-cover animate-in fade-in duration-200"
+                className="aspect-[2/3] w-44 rounded-2xl object-cover shadow-2xl ring-1 ring-white/10 sm:w-52 lg:w-full animate-in fade-in zoom-in-95 duration-300"
               />
               {isAdultTag && (
                 <span className="pointer-events-none absolute top-2 right-2 z-10 rounded-md bg-red-600/90 px-2 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white backdrop-blur">
@@ -359,7 +395,6 @@ function DetailBody({ m }: { m: AnilistMedia }) {
                   to="/anime/watch/$id"
                   params={{ id: encodeId(m.id, "anime") }}
                   hash={String(continueEpNum)}
-                  onClick={(e) => handlePlayClick(e, continueEpNum)}
                   className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background transition hover:scale-[1.02]"
                 >
                   <Play className="size-4 fill-current" /> Continue Ep {continueEpNum}
@@ -369,7 +404,6 @@ function DetailBody({ m }: { m: AnilistMedia }) {
                   to="/anime/watch/$id"
                   params={{ id: encodeId(m.id, "anime") }}
                   hash={firstEpisodeNum}
-                  onClick={(e) => handlePlayClick(e, firstEpisodeNum)}
                   className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background transition hover:scale-[1.02]"
                 >
                   <Play className="size-4 fill-current" /> Play Now
@@ -674,8 +708,16 @@ function SeasonsTab({ m }: { m: AnilistMedia }) {
   return (
     <div className="-mt-6">
       <AnimeRowShell>
-        {relations.map((r, idx) => (
-          <AnimeCard key={`rel_${r.node.id || "card"}_${idx}`} media={r.node} tag={r.relationType.replace(/_/g, " ")} />
+        {relations.map((r) => (
+          <div
+            key={r.node.id}
+            className="group/badge relative shrink-0 w-[130px] sm:w-[165px] lg:w-[190px]"
+          >
+            <AnimeCard media={r.node} badge={null} />
+            <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur transition-transform duration-300 group-hover/badge:-translate-y-1">
+              {r.relationType.replace(/_/g, " ")}
+            </span>
+          </div>
         ))}
       </AnimeRowShell>
     </div>
@@ -689,18 +731,17 @@ function NextEpisodeCountdown({
   nextEp: { episode: number; airingAt: number };
   banner: string | null;
 }) {
-  const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(() => nextEp.airingAt - Math.floor(Date.now() / 1000));
 
   useEffect(() => {
-    setMounted(true);
-    const update = () => setTimeLeft(nextEp.airingAt - Math.floor(Date.now() / 1000));
-    update();
-    const interval = setInterval(update, 1000);
+    setTimeLeft(nextEp.airingAt - Math.floor(Date.now() / 1000));
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
     return () => clearInterval(interval);
   }, [nextEp]);
 
-  if (!mounted || timeLeft <= 0) return null;
+  if (timeLeft <= 0) return null;
 
   const d = Math.floor(timeLeft / (3600 * 24));
   const h = Math.floor((timeLeft % (3600 * 24)) / 3600);
@@ -712,10 +753,7 @@ function NextEpisodeCountdown({
   parts.push(`${m}m`);
 
   return (
-    <div
-      suppressHydrationWarning
-      className="mb-4 flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/5 bg-card/40 p-2 animate-in fade-in duration-300"
-    >
+    <div className="mb-4 flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-white/5 bg-card/40 p-2 animate-in fade-in duration-300">
       <div className="relative grid aspect-video w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-black sm:w-36">
         {banner ? (
           <img
@@ -733,10 +771,8 @@ function NextEpisodeCountdown({
         </span>
       </div>
       <div className="min-w-0 flex-1 pr-2">
-        <p suppressHydrationWarning className="truncate text-sm font-bold">
-          Soon in {parts.join(" ")}
-        </p>
-        <p suppressHydrationWarning className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:text-xs">
+        <p className="truncate text-sm font-bold">Soon in {parts.join(" ")}</p>
+        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:text-xs">
           {new Date(nextEp.airingAt * 1000).toLocaleString()}
         </p>
       </div>
@@ -1017,8 +1053,8 @@ function RelatedRow({ title, items }: { title: string; items: AnilistMedia[] }) 
   if (items.length === 0) return null;
   return (
     <AnimeRowShell title={title}>
-      {items.map((r, idx) => (
-        <AnimeCard key={`rel_row_${r.id || "card"}_${idx}`} media={r} badge={null} />
+      {items.map((r) => (
+        <AnimeCard key={r.id} media={r} badge={null} />
       ))}
     </AnimeRowShell>
   );

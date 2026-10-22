@@ -10,7 +10,7 @@ export function Logo({ className = "" }: { className?: string }) {
       <img
         src="/logo.png"
         alt="AniKume"
-        className="h-9 w-auto select-none sm:h-11 transition-transform group-hover:scale-105"
+        className="h-9 w-auto select-none sm:h-11"
         draggable={false}
       />
     </Link>
